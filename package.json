@@ -5,8 +5,8 @@
   "main": "app.js",
   "scripts": {
     "build": "tsc",
-    "start": "node app.js",
-    "dev": "ts-node app.js",
+    "start": "node dist/app.js",
+    "dev": "ts-node src/app.ts",
     "test": "jest",
     "test:watch": "jest --watch"
   },
