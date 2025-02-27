@@ -1,6 +1,6 @@
-# Fishing Waters
+# Fishing Waters React App
 
-A Node.js application for managing fishing water information.
+A React application for visualizing fishing waters in Sweden.
 
 ## Prerequisites
 
@@ -9,46 +9,41 @@ A Node.js application for managing fishing water information.
 
 ## Installation
 
-1. Clone the repository:
+1. Navigate to the app directory:
+
    ```bash
-   git clone https://github.com/larsakeekstrand/fishingwaters.git
-   cd fishingwaters
+   cd app
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
-## Building the Application
+## Running the Application
 
-To build the TypeScript code into JavaScript:
+To start the development server:
+
+```bash
+npm start
+```
+
+The application will be available at <http://localhost:3000>.
+
+## Building for Production
+
+To build the application for production:
+
 ```bash
 npm run build
 ```
 
-## Running the Application
+This will create optimized files in the `build` directory that can be served by any static file server.
 
-There are two ways to run the application:
+## Features
 
-1. Production mode (after building):
-   ```bash
-   npm start
-   ```
-
-2. Development mode (with hot-reload):
-   ```bash
-   npm run dev
-   ```
-
-## Testing
-
-To run the tests:
-```bash
-npm test
-```
-
-To run tests in watch mode during development:
-```bash
-npm run test:watch
-```
+- Interactive map of Swedish lakes
+- Filter lakes by fish species
+- Visual indication of lakes containing specific species (e.g., Gös shown in green)
+- Lake information tooltips on hover
