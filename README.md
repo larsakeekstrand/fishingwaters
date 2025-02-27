@@ -9,13 +9,7 @@ A React application for visualizing fishing waters in Sweden.
 
 ## Installation
 
-1. Navigate to the app directory:
-
-   ```bash
-   cd app
-   ```
-
-2. Install dependencies:
+1. Install dependencies:
 
    ```bash
    npm install
