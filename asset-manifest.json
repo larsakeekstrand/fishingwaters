@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/fishingwaters/static/css/main.be8bfd59.css",
+    "main.js": "/fishingwaters/static/js/main.6ce89560.js",
+    "index.html": "/fishingwaters/index.html",
+    "main.be8bfd59.css.map": "/fishingwaters/static/css/main.be8bfd59.css.map",
+    "main.6ce89560.js.map": "/fishingwaters/static/js/main.6ce89560.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.be8bfd59.css",
+    "static/js/main.6ce89560.js"
+  ]
+}
