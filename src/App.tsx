@@ -4,6 +4,8 @@ import SpeciesFilter from './components/SpeciesFilter';
 import { GeoJsonCollection } from './types/GeoJsonTypes';
 import { mergeGeoJsonCollections, removeBOM, convertLakeDataToGeoJson } from './utils/DataLoader';
 
+export const BASE_PATH = process.env.PUBLIC_URL || '/fishingwaters';
+
 function App() {
   const [data, setData] = useState<GeoJsonCollection>({ type: 'FeatureCollection', features: [] });
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -19,41 +21,33 @@ function App() {
       setIsLoading(true);
       
       // First, fetch the list of files from the data directory index
-      const indexResponse = await fetch('/data/index.json');
+      const indexResponse = await fetch(`${BASE_PATH}/data/index.json`);
       
+      console.log('Index response status:', indexResponse.status);
+      console.log('Content-Type:', indexResponse.headers.get('content-type'));
+
       let fileList: string[] = [];
       
       // If index.json exists, use it to get the list of files
       if (indexResponse.ok) {
-        const indexData = await indexResponse.json();
-        fileList = indexData.files || [];
-      }/* else {
-        // Fallback to a default set of files
-        // This is a limitation of client-side React - we can't list directory contents directly
-        // We could manually list all expected files here as a fallback
-        fileList = ['lakes.json'];
-        
-        // Try to detect other JSON files by making requests with common patterns
-        const commonFileNames = [
-          'lakes_halland.json',
-          'lakes_varmland.json', 
-          'lakes_dalarna.json',
-          'Skåne 2025-02-11.json',
-          'Halland 2025-02-11.json',
-          'Nätprovfiske aggregerad data senaste fisket Halland 2025-02-11.json'
-        ];
-        
-        for (const fileName of commonFileNames) {
-          try {
-            const testResponse = await fetch(`/data/${fileName}`);
-            if (testResponse.ok) {
-              fileList.push(fileName);
-            }
-          } catch (e) {
-            // Ignore errors for these probing requests
-          }
+        try {
+          // Store the response text first
+          const responseText = await indexResponse.text();
+          console.log('Raw response:', responseText);
+          
+          // Then parse it as JSON
+          const indexData = JSON.parse(responseText);
+          console.log('Index data:', indexData);
+          fileList = indexData.files || [];
+        } catch (jsonError) {
+          console.error('Error parsing index.json:', jsonError);
+          setError('Invalid JSON format in index.json');
         }
-      }*/
+      } else {
+        const errorText = await indexResponse.text();
+        console.error('Failed to fetch index.json:', indexResponse.status, errorText);
+        setError(`Failed to load index.json (${indexResponse.status})`);
+      }
       
       // Then fetch each file and merge the data
       const collections: GeoJsonCollection[] = [];
@@ -61,7 +55,7 @@ function App() {
       for (const fileName of fileList) {
         if (fileName.endsWith('.json')) {
           try {
-            const response = await fetch(`/data/${fileName}`);
+            const response = await fetch(`${BASE_PATH}/data/${fileName}`);
             if (response.ok) {
               let text = await response.text();
               
