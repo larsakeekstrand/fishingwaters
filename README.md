@@ -1,6 +1,6 @@
 # Fishing Waters
 
-A Node.js application for managing fishing waters information.
+A Node.js application for managing fishing water information.
 
 ## Prerequisites
 

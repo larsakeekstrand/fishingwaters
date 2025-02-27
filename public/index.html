@@ -16,17 +16,296 @@
             margin: 0;
             padding: 0;
         }
+        .lake-tooltip {
+            font-size: 14px;
+            padding: 4px 8px;
+        }
+        .filter-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            max-height: 80vh;
+            overflow-y: auto;
+            min-width: 200px;
+        }
+        .filter-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .species-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-item input {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="filter-panel" class="filter-panel">
+        <div class="filter-header">Filter by Species</div>
+        <div>
+            <button id="select-all">Select All</button>
+            <button id="clear-all">Clear All</button>
+        </div>
+        <div id="species-list" class="species-list">
+            <!-- Checkboxes will be added here -->
+        </div>
+    </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Initialize the map centered on Sweden
         const map = L.map('map').setView([62.0, 15.0], 5);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
+            attribution: ' OpenStreetMap contributors'
         }).addTo(map);
+        
+        // Global variables to store data and layer
+        let allLakes = [];
+        let lakeLayer = null;
+        let speciesFilters = new Set(); // Store currently selected species filters
+
+        // Fetch lake data from the API
+        async function fetchLakeData() {
+            try {
+                const response = await fetch('/api/lakes');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                allLakes = data;
+                setupSpeciesFilter(data);
+                displayLakesOnMap(data);
+            } catch (error) {
+                console.error('Error fetching lake data:', error);
+            }
+        }
+
+        // Extract unique species from all lakes
+        function extractUniqueSpecies(data) {
+            const speciesSet = new Set();
+            
+            data.features.forEach(feature => {
+                // Check both English and Swedish property names
+                const species = feature.properties.catchedSpecies || feature.properties.fångadeArter;
+                
+                if (species) {
+                    if (Array.isArray(species)) {
+                        species.forEach(s => speciesSet.add(s));
+                    } else if (typeof species === 'string') {
+                        // Split string by comma if it's a comma-separated list
+                        if (species.includes(',')) {
+                            species.split(',').map(s => s.trim()).forEach(s => speciesSet.add(s));
+                        } else {
+                            speciesSet.add(species);
+                        }
+                    }
+                }
+            });
+            
+            return Array.from(speciesSet).sort();
+        }
+
+        // Setup the species filter checkboxes
+        function setupSpeciesFilter(data) {
+            const uniqueSpecies = extractUniqueSpecies(data);
+            const speciesList = document.getElementById('species-list');
+            
+            // Clear existing checkboxes
+            speciesList.innerHTML = '';
+            
+            // Add checkbox for each species
+            uniqueSpecies.forEach(species => {
+                const checkboxItem = document.createElement('div');
+                checkboxItem.className = 'checkbox-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = species;
+                checkbox.id = `species-${species.replace(/\s+/g, '-')}`;
+                
+                const label = document.createElement('label');
+                label.textContent = species;
+                label.setAttribute('for', checkbox.id);
+                
+                // Add event listener to update filter when checkbox changes
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        speciesFilters.add(species);
+                    } else {
+                        speciesFilters.delete(species);
+                    }
+                    applyFilters();
+                });
+                
+                checkboxItem.appendChild(checkbox);
+                checkboxItem.appendChild(label);
+                speciesList.appendChild(checkboxItem);
+            });
+            
+            // Setup select all & clear all buttons
+            document.getElementById('select-all').addEventListener('click', function() {
+                uniqueSpecies.forEach(species => {
+                    const checkbox = document.getElementById(`species-${species.replace(/\s+/g, '-')}`);
+                    checkbox.checked = true;
+                    speciesFilters.add(species);
+                });
+                applyFilters();
+            });
+            
+            document.getElementById('clear-all').addEventListener('click', function() {
+                uniqueSpecies.forEach(species => {
+                    const checkbox = document.getElementById(`species-${species.replace(/\s+/g, '-')}`);
+                    checkbox.checked = false;
+                });
+                speciesFilters.clear();
+                applyFilters();
+            });
+        }
+
+        // Apply currently selected filters and update the map
+        function applyFilters() {
+            // Remove the current layer if it exists
+            if (lakeLayer) {
+                map.removeLayer(lakeLayer);
+            }
+            
+            // If no filters selected, show all lakes
+            if (speciesFilters.size === 0) {
+                displayLakesOnMap(allLakes);
+                return;
+            }
+            
+            // Filter lakes based on selected species
+            const filteredFeatures = allLakes.features.filter(feature => {
+                // Helper function to check if any of the feature species match any filters
+                function hasAnySelectedSpecies(featureSpecies) {
+                    if (!featureSpecies) return false;
+                    
+                    if (Array.isArray(featureSpecies)) {
+                        return featureSpecies.some(s => speciesFilters.has(s));
+                    } else if (typeof featureSpecies === 'string') {
+                        // Check if it's a comma-separated string
+                        if (featureSpecies.includes(',')) {
+                            return featureSpecies.split(',').map(s => s.trim())
+                                .some(s => speciesFilters.has(s));
+                        }
+                        // Check if the full string is in our filters
+                        return speciesFilters.has(featureSpecies);
+                    }
+                    return false;
+                }
+                
+                // Check both English and Swedish properties
+                return hasAnySelectedSpecies(feature.properties.catchedSpecies) ||
+                       hasAnySelectedSpecies(feature.properties.fångadeArter);
+            });
+            
+            // Display filtered lakes
+            displayLakesOnMap({
+                type: 'FeatureCollection',
+                features: filteredFeatures
+            });
+        }
+
+        // Display lakes on the map
+        function displayLakesOnMap(geoJsonData) {
+            // Helper function to check if a lake has Gös among its caught species
+            function hasGös(feature) {
+                const checkSpecies = (species) => {
+                    if (!species) return false;
+                    if (Array.isArray(species)) {
+                        return species.some(s => s.includes("Gös"));
+                    }
+                    return typeof species === 'string' && species.includes("Gös");
+                };
+                
+                // Check both English and Swedish property names
+                return checkSpecies(feature.properties.catchedSpecies) || 
+                       checkSpecies(feature.properties.fångadeArter);
+            }
+            
+            lakeLayer = L.geoJSON(geoJsonData, {
+                pointToLayer: function(feature, latlng) {
+                    // Determine the color based on presence of "Gös"
+                    const fillColor = hasGös(feature) ? '#00bb00' : '#3388ff';
+                    
+                    // Create a circle marker for each lake
+                    return L.circleMarker(latlng, {
+                        radius: 5,
+                        fillColor: fillColor,
+                        color: '#fff',
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                },
+                onEachFeature: function(feature, layer) {
+                    // Create tooltip content
+                    const maxDepth = feature.properties.maxDepth !== null 
+                        ? `${feature.properties.maxDepth} m` 
+                        : 'Unknown';
+                    
+                    // Format area in hectares
+                    const area = feature.properties.area !== null && feature.properties.area !== undefined
+                        ? `${feature.properties.area.toLocaleString()} ha`
+                        : 'Unknown';
+                    
+                    // Format caught species
+                    let caughtSpecies = 'None reported';
+                    if (feature.properties.fångadeArter) {
+                        if (Array.isArray(feature.properties.fångadeArter)) {
+                            caughtSpecies = feature.properties.fångadeArter.join(', ');
+                        } else {
+                            caughtSpecies = feature.properties.fångadeArter;
+                        }
+                    }
+                    
+                    // Format latest fishing year
+                    const latestFishingYear = feature.properties.senasteFiskeår !== null 
+                        && feature.properties.senasteFiskeår !== undefined
+                        ? feature.properties.senasteFiskeår
+                        : 'Unknown';
+                    
+                    const tooltipContent = `
+                        <div class="lake-tooltip">
+                            <strong>${feature.properties.name}</strong><br>
+                            Max Depth: ${maxDepth}<br>
+                            Area: ${area}<br>
+                            County: ${feature.properties.county}<br>
+                            Caught Species: ${caughtSpecies}<br>
+                            Latest Fishing Year: ${latestFishingYear}
+                        </div>
+                    `;
+                    
+                    // Bind tooltip to show on hover
+                    layer.bindTooltip(tooltipContent, {
+                        sticky: true,
+                        direction: 'top'
+                    });
+                }
+            }).addTo(map);
+            
+            return lakeLayer;
+        }
+
+        // Fetch data when the page loads
+        document.addEventListener('DOMContentLoaded', fetchLakeData);
     </script>
 </body>
 </html>
