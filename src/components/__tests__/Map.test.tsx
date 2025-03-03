@@ -141,10 +141,25 @@ describe('Map', () => {
   });
 
   it('displays correct tooltip information', () => {
-    const features = [
-      createMockFeature('Test Lake', [18.0579, 59.3293], ['Gädda', 'Abborre'])
-    ];
-    const data = createMockData(features);
+    const feature: GeoJsonFeature = {
+      type: 'Feature' as const,
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [18.0579, 59.3293]
+      },
+      properties: {
+        name: 'Test Lake',
+        county: 'Test County',
+        location: 'Test Location',
+        maxDepth: 10,
+        area: 100,
+        elevation: 50,
+        catchedSpecies: ['Gädda', 'Abborre'],
+        vanlArt: 'Gädda',
+        nästVanlArt: 'Abborre'
+      }
+    };
+    const data = createMockData([feature]);
 
     render(<Map data={data} filteredSpecies={new Set()} />);
 
@@ -154,6 +169,8 @@ describe('Map', () => {
     expect(tooltip).toHaveTextContent('Area: 100 ha');
     expect(tooltip).toHaveTextContent('Test County');
     expect(tooltip).toHaveTextContent('Gädda, Abborre');
+    expect(tooltip).toHaveTextContent('Vanligaste art: Gädda');
+    expect(tooltip).toHaveTextContent('Näst vanligaste art: Abborre');
   });
 
   it('handles missing or null values in tooltip', () => {
