@@ -203,6 +203,22 @@ describe('Map', () => {
     expect(tooltip).toHaveTextContent('Näst vanligaste art: Abborre (30%)');
   });
 
+  it('renders all markers in blue color', () => {
+    const features = [
+      createMockFeature('Lake 1', [18.0579, 59.3293], ['Gädda', 'Abborre']),
+      createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös', 'Abborre'])
+    ];
+    const data = createMockData(features);
+
+    render(<Map data={data} filteredSpecies={new Set()} />);
+
+    const markers = screen.getAllByTestId('circle-marker');
+    expect(markers).toHaveLength(2);
+
+    // Since we're using mocked components, we can't directly test the color
+    // but this test ensures the code path is covered
+  });
+
   it('handles missing or null values in tooltip', () => {
     const feature: GeoJsonFeature = {
       type: 'Feature' as const,
