@@ -37,19 +37,6 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies }) => {
     });
   };
 
-  // Helper function to check if a lake has Gös among its caught species
-  const hasGös = (feature: GeoJsonFeature): boolean => {
-    const checkSpecies = (species: string[] | string | undefined) => {
-      if (!species) return false;
-      if (Array.isArray(species)) {
-        return species.some(s => s.includes("Gös"));
-      }
-      return typeof species === 'string' && species.includes("Gös");
-    };
-    
-    return checkSpecies(feature.properties.catchedSpecies) || 
-           checkSpecies(feature.properties.fångadeArter);
-  };
 
   // Format caught species for display in tooltip
   const renderCaughtSpecies = (feature: GeoJsonFeature): string => {
@@ -76,8 +63,7 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies }) => {
         // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]
         const position: [number, number] = [coordinates[1], coordinates[0]]; 
         
-        // Determine color based on presence of "Gös"
-        const fillColor = hasGös(feature) ? '#00bb00' : '#3388ff';
+        const fillColor = '#3388ff';
         
         return (
           <CircleMarker 
