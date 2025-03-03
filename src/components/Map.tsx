@@ -101,6 +101,7 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies }) => {
                   : 'Okänd'}<br />
                 Län: {feature.properties.county}<br />
                 Fångade arter: {renderCaughtSpecies(feature)}<br />
+                Vanligaste art: {feature.properties.vanlArt || 'Okänd'}<br />
                 Senaste fiskeår: {feature.properties.senasteFiskeår || 'Okänt'}
               </div>
             </Tooltip>
