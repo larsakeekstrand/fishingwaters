@@ -173,6 +173,36 @@ describe('Map', () => {
     expect(tooltip).toHaveTextContent('Näst vanligaste art: Abborre');
   });
 
+  it('displays species percentages in tooltip', () => {
+    const feature: GeoJsonFeature = {
+      type: 'Feature' as const,
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [18.0579, 59.3293]
+      },
+      properties: {
+        name: 'Test Lake',
+        county: 'Test County',
+        location: 'Test Location',
+        maxDepth: 10,
+        area: 100,
+        elevation: 50,
+        catchedSpecies: ['Gädda', 'Abborre'],
+        vanlArt: 'Gädda',
+        vanlArtWProc: 45,
+        nästVanlArt: 'Abborre',
+        nästVanlArtWProc: 30
+      }
+    };
+    const data = createMockData([feature]);
+
+    render(<Map data={data} filteredSpecies={new Set()} />);
+
+    const tooltip = screen.getByTestId('tooltip');
+    expect(tooltip).toHaveTextContent('Vanligaste art: Gädda (45%)');
+    expect(tooltip).toHaveTextContent('Näst vanligaste art: Abborre (30%)');
+  });
+
   it('handles missing or null values in tooltip', () => {
     const feature: GeoJsonFeature = {
       type: 'Feature' as const,
