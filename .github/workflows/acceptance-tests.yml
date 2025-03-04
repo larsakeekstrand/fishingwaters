@@ -1,0 +1,85 @@
+name: Acceptance Tests
+
+on:
+  # Run after successful deployment to GitHub Pages
+  workflow_run:
+    workflows: ["Deploy to GitHub Pages"]
+    types:
+      - completed
+    branches:
+      - main
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  acceptance_tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Cypress
+        run: npm install cypress @cypress/xpath --save-dev
+      
+      - name: Wait for deployment to be available
+        timeout-minutes: 10
+        run: |
+          echo "Waiting for GitHub Pages deployment to be available..."
+          # Initial delay to give GitHub Pages time to start deploying
+          sleep 30
+          
+          # URL to check
+          URL="https://larsakeekstrand.github.io/fishingwaters"
+          
+          # Function to check if site is available
+          function check_site() {
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+            if [ "$HTTP_CODE" -eq 200 ]; then
+              echo " Site is available!"
+              return 0
+            else
+              echo " Site returned HTTP $HTTP_CODE - still waiting..."
+              return 1
+            fi
+          }
+          
+          # Try up to 30 times with 10 second delays
+          for i in {1..30}; do
+            if check_site; then
+              # Site is up - wait a bit more for everything to stabilize
+              echo "Waiting an additional 30 seconds for site to fully stabilize..."
+              sleep 30
+              echo "Ready to run tests!"
+              exit 0
+            fi
+            sleep 10
+          done
+          
+          echo " Timed out waiting for site to be available"
+          exit 1
+      
+      - name: Run acceptance tests
+        uses: cypress-io/github-action@v5
+        with:
+          config: baseUrl=https://larsakeekstrand.github.io/fishingwaters
+          browser: chrome
+          headed: false
+      
+      - name: Upload screenshots if tests fail
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          retention-days: 7
