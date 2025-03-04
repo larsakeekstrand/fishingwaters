@@ -77,7 +77,7 @@ jobs:
           headed: false
       
       - name: Upload screenshots if tests fail
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: cypress-screenshots
