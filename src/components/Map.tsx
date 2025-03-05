@@ -5,9 +5,10 @@ import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
 interface MapProps {
   data: GeoJsonCollection;
   filteredSpecies: Set<string>;
+  onLakeSelect: (lake: GeoJsonFeature) => void;
 }
 
-const Map: React.FC<MapProps> = ({ data, filteredSpecies }) => {
+const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
   const swedenCenter: [number, number] = [62.0, 15.0];
   
   // Filter features based on selected species
@@ -76,6 +77,9 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies }) => {
               weight: 1,
               opacity: 1,
               fillOpacity: 0.8
+            }}
+            eventHandlers={{
+              click: () => onLakeSelect(feature)
             }}
           >
             <Tooltip sticky direction="top">
