@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Map from './components/Map';
 import SpeciesFilter from './components/SpeciesFilter';
-import { GeoJsonCollection } from './types/GeoJsonTypes';
+import SidePanel from './components/SidePanel';
+import { GeoJsonCollection, GeoJsonFeature } from './types/GeoJsonTypes';
 import { mergeGeoJsonCollections, removeBOM, convertLakeDataToGeoJson } from './utils/DataLoader';
 
 export const BASE_PATH = process.env.PUBLIC_URL || '/fishingwaters';
@@ -11,6 +12,7 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [filteredSpecies, setFilteredSpecies] = useState<Set<string>>(new Set());
+  const [selectedLake, setSelectedLake] = useState<GeoJsonFeature | null>(null);
 
   useEffect(() => {
     fetchAllLakeData();
@@ -109,7 +111,12 @@ function App() {
 
   return (
     <div className="app">
-      <Map data={data} filteredSpecies={filteredSpecies} />
+      <SidePanel selectedLake={selectedLake} />
+      <Map
+        data={data}
+        filteredSpecies={filteredSpecies}
+        onLakeSelect={setSelectedLake}
+      />
       <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
     </div>
   );
