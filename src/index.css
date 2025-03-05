@@ -94,3 +94,56 @@ code {
 .lake-info strong {
   color: #555;
 }
+
+.directions-container {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.directions-container h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.2em;
+}
+
+.directions-input {
+  margin-bottom: 15px;
+}
+
+.directions-input label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+}
+
+.directions-input input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.directions-button {
+  background-color: #3388ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.directions-button:hover {
+  background-color: #2377e8;
+}
+
+.directions-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}

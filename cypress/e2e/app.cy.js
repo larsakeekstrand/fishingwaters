@@ -86,4 +86,31 @@ describe('Fishing Waters App Acceptance Tests', () => {
     
     checkWithRetry();
   });
+
+  it('shows directions interface when a lake is selected', () => {
+    // Wait for map data to load
+    cy.get('.leaflet-overlay-pane svg path', { timeout: 20000 }).should('exist');
+
+    // Click on a lake marker (first one we find)
+    cy.get('.leaflet-overlay-pane svg path').first().click();
+
+    // Verify the side panel shows lake info
+    cy.get('.side-panel h2').should('exist');
+
+    // Verify directions interface is shown
+    cy.get('.directions-container').should('exist');
+    cy.get('.directions-container h3').should('contain', 'Vägbeskrivning');
+    cy.get('label[for="start-location"]').should('contain', 'Din plats:');
+    cy.get('#start-location').should('exist');
+    cy.get('.directions-button').should('contain', 'Hämta vägbeskrivning');
+
+    // Verify button is initially disabled
+    cy.get('.directions-button').should('be.disabled');
+
+    // Enter a location
+    cy.get('#start-location').type('Stockholm');
+
+    // Verify button is now enabled
+    cy.get('.directions-button').should('not.be.disabled');
+  });
 });
