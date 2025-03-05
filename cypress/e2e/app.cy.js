@@ -8,6 +8,18 @@ describe('Fishing Waters App Acceptance Tests', () => {
     // Wait for the loading state to finish and ensure app is loaded
     cy.get('.loading-container', { timeout: 30000 }).should('not.exist');
     cy.get('.app', { timeout: 10000 }).should('exist');
+
+    // Mock geolocation
+    cy.window().then((win) => {
+      cy.stub(win.navigator.geolocation, 'getCurrentPosition').callsFake((cb) => {
+        return cb({
+          coords: {
+            latitude: 59.3293,
+            longitude: 18.0686
+          }
+        });
+      });
+    });
   });
 
   it('successfully loads the application', () => {
@@ -85,5 +97,51 @@ describe('Fishing Waters App Acceptance Tests', () => {
     }
     
     checkWithRetry();
+  });
+
+  it('shows driving directions interface in the side panel', () => {
+    // First, we need to select a lake to see the side panel details
+    // Find a lake marker and click it
+    cy.get('.leaflet-overlay-pane svg path').first().click({ force: true });
+
+    // Verify the side panel is showing lake information
+    cy.get('.side-panel h2').should('exist');
+
+    // Check for the driving directions section
+    cy.get('.driving-directions').should('exist');
+    cy.get('.driving-directions h3').should('contain', 'Körsträcka');
+    cy.get('.get-directions-btn').should('contain', 'Beräkna körsträcka');
+  });
+
+  it('calculates driving distance when requested', () => {
+    // Mock the fetch API for the driving directions
+    cy.intercept('GET', 'https://api.openrouteservice.org/v2/directions/driving-car*', {
+      statusCode: 200,
+      body: {
+        features: [
+          {
+            properties: {
+              summary: {
+                distance: 25000, // 25 km in meters
+                duration: 1800 // 30 minutes in seconds
+              }
+            }
+          }
+        ]
+      }
+    }).as('getDrivingDirections');
+
+    // Select a lake
+    cy.get('.leaflet-overlay-pane svg path').first().click({ force: true });
+
+    // Click the calculate driving distance button
+    cy.get('.get-directions-btn').click();
+
+    // Wait for the API call to complete
+    cy.wait('@getDrivingDirections');
+
+    // Verify the driving distance is displayed
+    cy.get('.driving-directions p').should('contain', 'Avstånd från din position');
+    cy.get('.driving-directions p').should('contain', '25.0 km (ca 30 minuter)');
   });
 });
