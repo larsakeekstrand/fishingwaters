@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Box, CircularProgress, Container, Grid, Typography } from '@material-ui/core';
 import Map from './components/Map';
 import SpeciesFilter from './components/SpeciesFilter';
 import SidePanel from './components/SidePanel';
