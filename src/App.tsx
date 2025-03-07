@@ -1,4 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { 
+  ThemeProvider, 
+  createTheme, 
+  CssBaseline,
+  Box,
+  Typography
+} from '@mui/material';
 import Map from './components/Map';
 import SpeciesFilter from './components/SpeciesFilter';
 import SidePanel from './components/SidePanel';
@@ -6,6 +13,23 @@ import { GeoJsonCollection, GeoJsonFeature } from './types/GeoJsonTypes';
 import { mergeGeoJsonCollections, removeBOM, convertLakeDataToGeoJson } from './utils/DataLoader';
 
 export const BASE_PATH = process.env.PUBLIC_URL || '/fishingwaters';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2196f3', // Blue color for water theme
+    },
+    secondary: {
+      main: '#4caf50', // Green for nature theme
+    },
+    background: {
+      default: '#f5f5f5',
+    },
+  },
+  typography: {
+    fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif',
+  },
+});
 
 function App() {
   const [data, setData] = useState<GeoJsonCollection>({ type: 'FeatureCollection', features: [] });
@@ -102,23 +126,56 @@ function App() {
   };
 
   if (isLoading) {
-    return <div className="loading-container">Laddar sjödata...</div>;
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box 
+          display="flex" 
+          justifyContent="center" 
+          alignItems="center" 
+          minHeight="100vh"
+          bgcolor="background.default"
+        >
+          <Typography variant="h6" color="text.secondary">
+            Laddar sjödata...
+          </Typography>
+        </Box>
+      </ThemeProvider>
+    );
   }
 
   if (error) {
-    return <div className="error-container">{error || 'Det gick inte att ladda sjödata. Försök igen senare.'}</div>;
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box 
+          display="flex" 
+          justifyContent="center" 
+          alignItems="center" 
+          minHeight="100vh"
+          bgcolor="background.default"
+        >
+          <Typography variant="h6" color="error">
+            {error || 'Det gick inte att ladda sjödata. Försök igen senare.'}
+          </Typography>
+        </Box>
+      </ThemeProvider>
+    );
   }
 
   return (
-    <div className="app">
-      <SidePanel selectedLake={selectedLake} />
-      <Map
-        data={data}
-        filteredSpecies={filteredSpecies}
-        onLakeSelect={setSelectedLake}
-      />
-      <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <div className="app">
+        <SidePanel selectedLake={selectedLake} />
+        <Map
+          data={data}
+          filteredSpecies={filteredSpecies}
+          onLakeSelect={setSelectedLake}
+        />
+        <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
+      </div>
+    </ThemeProvider>
   );
 }
 

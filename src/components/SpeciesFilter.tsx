@@ -1,10 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { GeoJsonFeature } from '../types/GeoJsonTypes';
+import { 
+  Paper,
+  Typography,
+  Button,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Stack,
+  Divider,
+  Box
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 interface SpeciesFilterProps {
   features: GeoJsonFeature[];
   onFilterChange: (selectedSpecies: Set<string>) => void;
 }
+
+const StyledFilterPanel = styled(Paper)(({ theme }) => ({
+  position: 'absolute',
+  top: theme.spacing(2),
+  right: theme.spacing(2),
+  padding: theme.spacing(2),
+  zIndex: 1000,
+  maxHeight: '80vh',
+  overflow: 'auto',
+  width: 250,
+  boxShadow: theme.shadows[3],
+  borderRadius: theme.shape.borderRadius
+}));
 
 const SpeciesFilter: React.FC<SpeciesFilterProps> = ({ features, onFilterChange }) => {
   const [uniqueSpecies, setUniqueSpecies] = useState<string[]>([]);
@@ -57,28 +82,54 @@ const SpeciesFilter: React.FC<SpeciesFilterProps> = ({ features, onFilterChange 
   };
 
   return (
-    <div className="filter-panel">
-      <div className="filter-header">Filtrera efter arter</div>
-      <div className="filter-buttons">
-        <button onClick={handleSelectAll}>Välj alla</button>
-        <button onClick={handleClearAll}>Rensa alla</button>
-      </div>
-      <div className="species-list">
-        {uniqueSpecies.map(species => (
-          <div key={species} className="checkbox-item">
-            <input
-              type="checkbox"
-              id={`species-${species.replace(/\s+/g, '-')}`}
-              checked={selectedSpecies.has(species)}
-              onChange={(e) => handleCheckboxChange(species, e.target.checked)}
+    <StyledFilterPanel>
+      <Typography variant="subtitle1" color="primary" fontWeight="medium" gutterBottom>
+        Filtrera efter arter
+      </Typography>
+      
+      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+        <Button 
+          size="small" 
+          variant="outlined" 
+          onClick={handleSelectAll}
+          color="primary"
+        >
+          Välj alla
+        </Button>
+        <Button 
+          size="small" 
+          variant="outlined" 
+          onClick={handleClearAll}
+          color="secondary"
+        >
+          Rensa alla
+        </Button>
+      </Stack>
+      
+      <Divider sx={{ mb: 2 }} />
+      
+      <Box sx={{ maxHeight: '60vh', overflow: 'auto' }}>
+        <FormGroup>
+          {uniqueSpecies.map(species => (
+            <FormControlLabel
+              key={species}
+              control={
+                <Checkbox
+                  checked={selectedSpecies.has(species)}
+                  onChange={(e) => handleCheckboxChange(species, e.target.checked)}
+                  size="small"
+                  color="primary"
+                />
+              }
+              label={
+                <Typography variant="body2">{species}</Typography>
+              }
+              sx={{ mb: 0.5 }}
             />
-            <label htmlFor={`species-${species.replace(/\s+/g, '-')}`}>
-              {species}
-            </label>
-          </div>
-        ))}
-      </div>
-    </div>
+          ))}
+        </FormGroup>
+      </Box>
+    </StyledFilterPanel>
   );
 };
 

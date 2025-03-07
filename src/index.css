@@ -1,8 +1,7 @@
+/* Basic resets */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -12,85 +11,24 @@ code {
     monospace;
 }
 
+/* Map styles */
 .leaflet-container {
   width: 100%;
   height: 100vh;
 }
 
-.filter-panel {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 1000;
-  background: white;
-  padding: 10px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  max-height: 80vh;
-  overflow-y: auto;
-  min-width: 200px;
-}
-
-.filter-header {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.filter-buttons {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 10px;
-}
-
-.species-list {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-.checkbox-item {
-  display: flex;
-  align-items: center;
-}
-
-.checkbox-item input {
-  margin-right: 5px;
-}
-
 .lake-tooltip {
   font-size: 14px;
-  padding: 4px 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  border: none;
 }
 
+/* Layout */
 .app {
   display: flex;
   height: 100vh;
   width: 100vw;
   position: relative;
-}
-
-.side-panel {
-  width: 300px;
-  background-color: white;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  overflow-y: auto;
-  z-index: 1000;
-}
-
-.side-panel h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.lake-info p {
-  margin: 10px 0;
-  line-height: 1.4;
-}
-
-.lake-info strong {
-  color: #555;
 }

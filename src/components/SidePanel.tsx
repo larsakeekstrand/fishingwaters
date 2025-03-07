@@ -1,16 +1,40 @@
 import React from 'react';
 import { GeoJsonFeature } from '../types/GeoJsonTypes';
+import { 
+  Paper, 
+  Typography, 
+  List, 
+  ListItem, 
+  ListItemText, 
+  Divider,
+  Box
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
 }
 
+const StyledSidePanel = styled(Paper)(({ theme }) => ({
+  width: 300,
+  padding: theme.spacing(3),
+  height: '100vh',
+  overflow: 'auto',
+  boxShadow: theme.shadows[3],
+  zIndex: 1000,
+  position: 'relative'
+}));
+
 const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
   if (!selectedLake) {
     return (
-      <div className="side-panel">
-        <p>Välj en sjö på kartan för att se mer information</p>
-      </div>
+      <StyledSidePanel>
+        <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+          <Typography variant="body1" color="text.secondary">
+            Välj en sjö på kartan för att se mer information
+          </Typography>
+        </Box>
+      </StyledSidePanel>
     );
   }
 
@@ -21,24 +45,62 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
   };
 
   return (
-    <div className="side-panel">
-      <h2>{selectedLake.properties.name}</h2>
-      <div className="lake-info">
-        <p><strong>Maxdjup:</strong> {selectedLake.properties.maxDepth !== null ? `${selectedLake.properties.maxDepth} m` : 'Okänt'}</p>
-        <p><strong>Area:</strong> {selectedLake.properties.area !== null && selectedLake.properties.area !== undefined
-          ? `${selectedLake.properties.area.toLocaleString()} ha`
-          : 'Okänd'}</p>
-        <p><strong>Län:</strong> {selectedLake.properties.county}</p>
-        <p><strong>Fångade arter:</strong> {renderCaughtSpecies(selectedLake.properties.catchedSpecies || selectedLake.properties.fångadeArter)}</p>
-        <p><strong>Vanligaste art:</strong> {selectedLake.properties.vanlArt
-          ? `${selectedLake.properties.vanlArt} (${selectedLake.properties.vanlArtWProc}%)`
-          : 'Okänd'}</p>
-        <p><strong>Näst vanligaste art:</strong> {selectedLake.properties.nästVanlArt
-          ? `${selectedLake.properties.nästVanlArt} (${selectedLake.properties.nästVanlArtWProc}%)`
-          : 'Okänd'}</p>
-        <p><strong>Senaste fiskeår:</strong> {selectedLake.properties.senasteFiskeår || 'Okänt'}</p>
-      </div>
-    </div>
+    <StyledSidePanel>
+      <Typography variant="h5" component="h2" gutterBottom color="primary">
+        {selectedLake.properties.name}
+      </Typography>
+      <Divider sx={{ mb: 2 }} />
+      <List disablePadding>
+        <ListItem sx={{ py: 1 }}>
+          <ListItemText 
+            primary="Maxdjup" 
+            secondary={selectedLake.properties.maxDepth !== null ? `${selectedLake.properties.maxDepth} m` : 'Okänt'} 
+          />
+        </ListItem>
+        <ListItem sx={{ py: 1 }}>
+          <ListItemText 
+            primary="Area" 
+            secondary={selectedLake.properties.area !== null && selectedLake.properties.area !== undefined
+              ? `${selectedLake.properties.area.toLocaleString()} ha`
+              : 'Okänd'} 
+          />
+        </ListItem>
+        <ListItem sx={{ py: 1 }}>
+          <ListItemText 
+            primary="Län" 
+            secondary={selectedLake.properties.county} 
+          />
+        </ListItem>
+        <ListItem sx={{ py: 1 }}>
+          <ListItemText 
+            primary="Fångade arter" 
+            secondary={renderCaughtSpecies(selectedLake.properties.catchedSpecies || selectedLake.properties.fångadeArter)} 
+          />
+        </ListItem>
+        <ListItem sx={{ py: 1 }}>
+          <ListItemText 
+            primary="Vanligaste art" 
+            secondary={selectedLake.properties.vanlArt
+              ? `${selectedLake.properties.vanlArt} (${selectedLake.properties.vanlArtWProc}%)`
+              : 'Okänd'} 
+          />
+        </ListItem>
+        <ListItem sx={{ py: 1 }}>
+          <ListItemText 
+            primary="Näst vanligaste art" 
+            secondary={selectedLake.properties.nästVanlArt
+              ? `${selectedLake.properties.nästVanlArt} (${selectedLake.properties.nästVanlArtWProc}%)`
+              : 'Okänd'} 
+          />
+        </ListItem>
+        <ListItem sx={{ py: 1 }}>
+          <ListItemText 
+            primary="Senaste fiskeår" 
+            secondary={selectedLake.properties.senasteFiskeår || 'Okänt'} 
+          />
+        </ListItem>
+      </List>
+    </StyledSidePanel>
   );
 };
 

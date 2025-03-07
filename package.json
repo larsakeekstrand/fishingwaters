@@ -4,6 +4,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.4.7",
+    "@mui/material": "^6.4.7",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.11",
     "@types/react": "^18.0.26",
@@ -46,12 +50,12 @@
     ]
   },
   "devDependencies": {
+    "@cypress/xpath": "^2.0.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/leaflet": "^1.9.8",
     "cypress": "^13.6.6",
-    "@cypress/xpath": "^2.0.3",
     "gh-pages": "^6.3.0"
   }
 }
