@@ -23,7 +23,7 @@ To start the development server:
 npm start
 ```
 
-The application will be available at <http://localhost:3000>.
+The application will be available at <http://localhost:3000>. Note that this is the default development server port.
 
 ## Building for Production
 
@@ -33,7 +33,7 @@ To build the application for production:
 npm run build
 ```
 
-This will create optimized files in the `build` directory that can be served by any static file server.
+This will create optimized files in the `build` directory that can be served by any static file server or web hosting platform.
 
 ## Testing
 
@@ -47,7 +47,7 @@ npm test
 
 ### Acceptance Tests
 
-The project includes end-to-end acceptance tests using Cypress to verify the deployed application works correctly.
+The project includes comprehensive end-to-end acceptance tests using Cypress to verify the deployed application works correctly.
 
 #### Running Cypress Tests Locally
 
@@ -55,23 +55,23 @@ The project includes end-to-end acceptance tests using Cypress to verify the dep
    ```bash
    npm run cypress
    ```
-   This opens the Cypress Test Runner, where you can select individual tests to run and watch them execute in real-time.
+   This opens the Cypress Test Runner, where you can select and run individual tests in real-time, with a visual interface.
 
 2. **Headless Mode (runs all tests in the terminal)**:
    ```bash
    npm run cypress:run
    ```
-   This runs all tests in the background and shows the results in your terminal.
+   This runs all tests in the background and displays the results directly in your terminal.
 
 3. **Against the Live Site**:
    ```bash
    npm run test:acceptance
    ```
-   This runs the tests against the deployed GitHub Pages site.
+   This runs the tests against the deployed GitHub Pages site to ensure production functionality.
 
 #### Acceptance Tests in CI
 
-Acceptance tests are automatically run in CI after each successful deployment to GitHub Pages. The GitHub Actions workflow:
+Acceptance tests are automatically run in Continuous Integration (CI) after each successful deployment to GitHub Pages. The GitHub Actions workflow:
 
 1. Waits for the deployment to be available
 2. Runs the Cypress tests against the live site
@@ -81,7 +81,9 @@ To run the acceptance tests manually from GitHub Actions, go to the Actions tab,
 
 ## Features
 
-- Interactive map of Swedish lakes
-- Filter lakes by fish species
-- Visual indication of lakes containing specific species (e.g., Gös shown in green)
-- Lake information tooltips on hover
+The Fishing Waters React App provides a rich, interactive experience for exploring Swedish lakes:
+
+- **Interactive Map**: A dynamic, zoomable map of Swedish lakes
+- **Species Filtering**: Easily filter lakes by specific fish species
+- **Visual Species Indicators**: Color-coded lake markers showing fish species presence (e.g., Gös shown in green)
+- **Informative Tooltips**: Hover over lakes to reveal detailed information
