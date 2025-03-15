@@ -104,10 +104,11 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
   );
 }
 
-const DriveDirections: React.FC<SidePanelProps> = ({ selectedLake }) => {
-  const [startLocation, setStartLocation] = React.useState('');
 import { GoogleMapsLoader } from '@googlemaps/js-api-loader';
 import { Box, Button, Divider, TextField, Typography } from '@mui/material';
+
+const DriveDirections: React.FC<SidePanelProps> = ({ selectedLake }) => {
+  const [startLocation, setStartLocation] = React.useState('');
 
 const googleMapsLoader = new GoogleMapsLoader({
   apiKey: 'YOUR_GOOGLE_MAPS_API_KEY',
@@ -173,7 +174,7 @@ const DriveDirections: React.FC<SidePanelProps> = ({ selectedLake }) => {
 
 export default SidePanel;
 
-  const handleGetDirections = () => {
+  const handleGetDirections = async (selectedLake: GeoJsonFeature, startLocation: string) => {
     if (!selectedLake) {
       return;
     }
@@ -183,8 +184,26 @@ export default SidePanel;
       return;
     }
 
-    // TODO: Integrate with a mapping API to get the driving directions
-    console.log(`Getting directions from ${startLocation} to ${selectedLake.properties.name}`);
+    try {
+      await googleMapsLoader.load();
+      const directionsService = new google.maps.DirectionsService();
+      const directionsRequest = {
+        origin: startLocation,
+        destination: `${selectedLake.geometry.coordinates[1]}, ${selectedLake.geometry.coordinates[0]}`,
+        travelMode: google.maps.TravelMode.DRIVING,
+      };
+
+      directionsService.route(directionsRequest, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          // Display the driving directions and route on the map
+          console.log(result.routes[0].legs[0].steps);
+        } else {
+          console.error('Directions request failed:', status);
+        }
+      });
+    } catch (error) {
+      console.error('Error loading Google Maps API:', error);
+    }
   };
 
   return (
