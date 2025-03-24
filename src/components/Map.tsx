@@ -62,139 +62,139 @@ const GeocodingControl = ({
 
 const Map = React.forwardRef<{ handleGetDirections: (startLocation: string, endLocation: [number, number]) => void }, MapProps>(
   ({ data, filteredSpecies, onLakeSelect }, ref) => {
-  const swedenCenter: [number, number] = [62.0, 15.0];
-  const [routeStart, setRouteStart] = useState<string | null>(null);
-  const [routeEnd, setRouteEnd] = useState<[number, number] | null>(null);
-  const [startPoint, setStartPoint] = useState<L.LatLng | null>(null);
-  const [endPoint, setEndPoint] = useState<L.LatLng | null>(null);
+    const swedenCenter: [number, number] = [62.0, 15.0];
+    const [routeStart, setRouteStart] = useState<string | null>(null);
+    const [routeEnd, setRouteEnd] = useState<[number, number] | null>(null);
+    const [startPoint, setStartPoint] = useState<L.LatLng | null>(null);
+    const [endPoint, setEndPoint] = useState<L.LatLng | null>(null);
 
   // Expose the handleGetDirections method via ref
-  React.useImperativeHandle(ref, () => ({
-    handleGetDirections
-  }));
+    React.useImperativeHandle(ref, () => ({
+      handleGetDirections
+    }));
   
   // Filter features based on selected species
-  const getFilteredFeatures = (): GeoJsonFeature[] => {
-    if (filteredSpecies.size === 0) {
-      return data.features;
-    }
-    
-    return data.features.filter(feature => {
-      const hasAnySelectedSpecies = (featureSpecies: string[] | string | undefined) => {
-        if (!featureSpecies) return false;
-        
-        if (Array.isArray(featureSpecies)) {
-          return featureSpecies.some(s => filteredSpecies.has(s));
-        } else if (typeof featureSpecies === 'string') {
-          if (featureSpecies.includes(',')) {
-            return featureSpecies.split(',').map(s => s.trim())
-              .some(s => filteredSpecies.has(s));
-          }
-          return filteredSpecies.has(featureSpecies);
-        }
-        return false;
-      };
+    const getFilteredFeatures = (): GeoJsonFeature[] => {
+      if (filteredSpecies.size === 0) {
+        return data.features;
+      }
       
-      return hasAnySelectedSpecies(feature.properties.catchedSpecies) || 
-             hasAnySelectedSpecies(feature.properties.fångadeArter);
-    });
-  };
+      return data.features.filter(feature => {
+        const hasAnySelectedSpecies = (featureSpecies: string[] | string | undefined) => {
+          if (!featureSpecies) return false;
+
+          if (Array.isArray(featureSpecies)) {
+            return featureSpecies.some(s => filteredSpecies.has(s));
+          } else if (typeof featureSpecies === 'string') {
+            if (featureSpecies.includes(',')) {
+              return featureSpecies.split(',').map(s => s.trim())
+                .some(s => filteredSpecies.has(s));
+            }
+            return filteredSpecies.has(featureSpecies);
+          }
+          return false;
+        };
+
+        return hasAnySelectedSpecies(feature.properties.catchedSpecies) ||
+               hasAnySelectedSpecies(feature.properties.fångadeArter);
+      });
+    };
 
 
   // Format caught species for display in tooltip
-  const renderCaughtSpecies = (feature: GeoJsonFeature): string => {
-    const species = feature.properties.catchedSpecies || feature.properties.fångadeArter;
-    
-    if (!species) return 'Inga rapporterade';
-    
-    if (Array.isArray(species)) {
-      return species.join(', ');
-    }
-    
-    return typeof species === 'string' ? species : 'Inga rapporterade';
-  };
+    const renderCaughtSpecies = (feature: GeoJsonFeature): string => {
+      const species = feature.properties.catchedSpecies || feature.properties.fångadeArter;
+
+      if (!species) return 'Inga rapporterade';
+
+      if (Array.isArray(species)) {
+        return species.join(', ');
+      }
+
+      return typeof species === 'string' ? species : 'Inga rapporterade';
+    };
 
   // Handle getting directions
-  const handleGetDirections = (startLocation: string, endLocation: [number, number]) => {
-    setRouteStart(startLocation);
-    setRouteEnd(endLocation);
-  };
+    const handleGetDirections = (startLocation: string, endLocation: [number, number]) => {
+      setRouteStart(startLocation);
+      setRouteEnd(endLocation);
+    };
 
-  // Handle route points found
-  const handleRouteFound = (start: L.LatLng | null, end: L.LatLng | null) => {
-    setStartPoint(start);
-    setEndPoint(end);
-  };
+    // Handle route points found
+    const handleRouteFound = (start: L.LatLng | null, end: L.LatLng | null) => {
+      setStartPoint(start);
+      setEndPoint(end);
+    };
 
   return (
-    <MapContainer center={swedenCenter} zoom={5} style={{ height: '100vh', width: '100%' }}>
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap bidragsgivare"
-        maxZoom={19}
-      />
+      <MapContainer center={swedenCenter} zoom={5} style={{ height: '100vh', width: '100%' }}>
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap bidragsgivare"
+          maxZoom={19}
+        />
 
-      {/* Geocoding control */}
-      <GeocodingControl
-        startLocation={routeStart}
-        endLocation={routeEnd}
-        onRouteFound={handleRouteFound}
-      />
+        {/* Geocoding control */}
+        <GeocodingControl
+          startLocation={routeStart}
+          endLocation={routeEnd}
+          onRouteFound={handleRouteFound}
+        />
 
-      {/* Routing machine */}
-      {startPoint && endPoint && (
-        <RoutingMachine startPoint={startPoint} endPoint={endPoint} />
-      )}
+        {/* Routing machine */}
+        {startPoint && endPoint && (
+          <RoutingMachine startPoint={startPoint} endPoint={endPoint} />
+        )}
 
-      {getFilteredFeatures().map((feature, index) => {
-        const { coordinates } = feature.geometry;
-        // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]
-        const position: [number, number] = [coordinates[1], coordinates[0]]; 
-        
-        const fillColor = '#3388ff';
-        
-        return (
-          <CircleMarker 
-            key={index}
-            center={position}
-            radius={5}
-            pathOptions={{
-              fillColor,
-              color: '#fff',
-              weight: 1,
-              opacity: 1,
-              fillOpacity: 0.8
-            }}
-            eventHandlers={{
-              click: () => {
-                onLakeSelect(feature);
-                // Clear any existing routes when selecting a new lake
-                setRouteStart(null);
-                setRouteEnd(null);
-                setStartPoint(null);
-                setEndPoint(null);
-              }
-            }}
-          >
-            <Tooltip sticky direction="top">
-              <div className="lake-tooltip">
-                <strong>{feature.properties.name}</strong><br />
-                Maxdjup: {feature.properties.maxDepth !== null ? `${feature.properties.maxDepth} m` : 'Okänt'}<br />
-                Area: {feature.properties.area !== null && feature.properties.area !== undefined 
-                  ? `${feature.properties.area.toLocaleString()} ha` 
-                  : 'Okänd'}<br />
-                Län: {feature.properties.county}<br />
-                Fångade arter: {renderCaughtSpecies(feature)}<br />
-                Vanligaste art: {feature.properties.vanlArt ? `${feature.properties.vanlArt} (${feature.properties.vanlArtWProc}%)` : 'Okänd'}<br />
-                Näst vanligaste art: {feature.properties.nästVanlArt ? `${feature.properties.nästVanlArt} (${feature.properties.nästVanlArtWProc}%)` : 'Okänd'}<br />
-                Senaste fiskeår: {feature.properties.senasteFiskeår || 'Okänt'}
-              </div>
-            </Tooltip>
-          </CircleMarker>
-        );
-      })}
-    </MapContainer>
+        {getFilteredFeatures().map((feature, index) => {
+          const { coordinates } = feature.geometry;
+          // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]
+          const position: [number, number] = [coordinates[1], coordinates[0]];
+
+          const fillColor = '#3388ff';
+
+          return (
+            <CircleMarker
+              key={index}
+              center={position}
+              radius={5}
+              pathOptions={{
+                fillColor,
+                color: '#fff',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+              }}
+              eventHandlers={{
+                click: () => {
+                  onLakeSelect(feature);
+                  // Clear any existing routes when selecting a new lake
+                  setRouteStart(null);
+                  setRouteEnd(null);
+                  setStartPoint(null);
+                  setEndPoint(null);
+                }
+              }}
+            >
+              <Tooltip sticky direction="top">
+                <div className="lake-tooltip">
+                  <strong>{feature.properties.name}</strong><br />
+                  Maxdjup: {feature.properties.maxDepth !== null ? `${feature.properties.maxDepth} m` : 'Okänt'}<br />
+                  Area: {feature.properties.area !== null && feature.properties.area !== undefined
+                    ? `${feature.properties.area.toLocaleString()} ha`
+                    : 'Okänd'}<br />
+                  Län: {feature.properties.county}<br />
+                  Fångade arter: {renderCaughtSpecies(feature)}<br />
+                  Vanligaste art: {feature.properties.vanlArt ? `${feature.properties.vanlArt} (${feature.properties.vanlArtWProc}%)` : 'Okänd'}<br />
+                  Näst vanligaste art: {feature.properties.nästVanlArt ? `${feature.properties.nästVanlArt} (${feature.properties.nästVanlArtWProc}%)` : 'Okänd'}<br />
+                  Senaste fiskeår: {feature.properties.senasteFiskeår || 'Okänt'}
+                </div>
+              </Tooltip>
+            </CircleMarker>
+          );
+        })}
+      </MapContainer>
   );
-};
+});
 
 export default Map;
