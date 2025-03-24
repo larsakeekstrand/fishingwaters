@@ -163,12 +163,26 @@ function App() {
     );
   }
 
+  // Reference to the Map component to access its methods
+  const mapRef = React.useRef<any>(null);
+
+  // Handle getting directions
+  const handleGetDirections = (startLocation: string, endLocation: [number, number]) => {
+    if (mapRef.current && mapRef.current.handleGetDirections) {
+      mapRef.current.handleGetDirections(startLocation, endLocation);
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <div className="app">
-        <SidePanel selectedLake={selectedLake} />
+        <SidePanel
+          selectedLake={selectedLake}
+          onGetDirections={handleGetDirections}
+        />
         <Map
+          ref={mapRef}
           data={data}
           filteredSpecies={filteredSpecies}
           onLakeSelect={setSelectedLake}

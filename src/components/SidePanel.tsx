@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GeoJsonFeature } from '../types/GeoJsonTypes';
 import { 
   Paper, 
@@ -7,12 +7,16 @@ import {
   ListItem, 
   ListItemText, 
   Divider,
-  Box
+  Box,
+  TextField,
+  Button,
+  Alert
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
+  onGetDirections?: (startLocation: string, endLocation: [number, number]) => void;
 }
 
 const StyledSidePanel = styled(Paper)(({ theme }) => ({
@@ -25,7 +29,10 @@ const StyledSidePanel = styled(Paper)(({ theme }) => ({
   position: 'relative'
 }));
 
-const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
+const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, onGetDirections }) => {
+  const [startLocation, setStartLocation] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+
   if (!selectedLake) {
     return (
       <StyledSidePanel>
@@ -42,6 +49,24 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
     if (!species) return 'Inga rapporterade';
     if (Array.isArray(species)) return species.join(', ');
     return species;
+  };
+
+  const handleGetDirections = () => {
+    if (!startLocation.trim()) {
+      setError('Vänligen ange en startplats');
+      return;
+    }
+
+    setError(null);
+
+    if (onGetDirections) {
+      // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]
+      const lakeCoordinates: [number, number] = [
+        selectedLake.geometry.coordinates[1],
+        selectedLake.geometry.coordinates[0]
+      ];
+      onGetDirections(startLocation, lakeCoordinates);
+    }
   };
 
   return (
@@ -100,6 +125,36 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
           />
         </ListItem>
       </List>
+
+      <Box mt={3}>
+        <Divider sx={{ mb: 2 }} />
+        <Typography variant="h6" gutterBottom>
+          Vägbeskrivning
+        </Typography>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        <TextField
+          fullWidth
+          label="Din startplats"
+          variant="outlined"
+          value={startLocation}
+          onChange={(e) => setStartLocation(e.target.value)}
+          placeholder="Ange din startplats"
+          size="small"
+          sx={{ mb: 2 }}
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          onClick={handleGetDirections}
+        >
+          Hämta vägbeskrivning
+        </Button>
+      </Box>
     </StyledSidePanel>
   );
 };
