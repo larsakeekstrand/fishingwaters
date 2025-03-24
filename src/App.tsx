@@ -37,6 +37,8 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [filteredSpecies, setFilteredSpecies] = useState<Set<string>>(new Set());
   const [selectedLake, setSelectedLake] = useState<GeoJsonFeature | null>(null);
+  // Reference to the Map component to access its methods
+  const mapRef = React.useRef<any>(null);
 
   useEffect(() => {
     fetchAllLakeData();
@@ -162,9 +164,6 @@ function App() {
       </ThemeProvider>
     );
   }
-
-  // Reference to the Map component to access its methods
-  const mapRef = React.useRef<any>(null);
 
   // Handle getting directions
   const handleGetDirections = (startLocation: string, endLocation: [number, number]) => {

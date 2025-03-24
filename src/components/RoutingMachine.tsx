@@ -26,12 +26,16 @@ const RoutingMachine: React.FC<RoutingMachineProps> = ({ startPoint, endPoint })
       lineOptions: {
         styles: [
           { color: '#6FA1EC', weight: 4 }
-        ]
+        ],
+        extendToWaypoints: true,
+        missingRouteTolerance: 0
       },
       altLineOptions: {
         styles: [
           { color: '#9BB8E8', weight: 3 }
-        ]
+        ],
+        extendToWaypoints: true,
+        missingRouteTolerance: 0
       }
     }).addTo(map);
 
