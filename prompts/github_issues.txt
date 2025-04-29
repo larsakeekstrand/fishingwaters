@@ -1,0 +1,9 @@
+claude -p "I want a one file python application that can get a list of open issues on github. Place it in the script directory." --allowedTools "Write" "Edit" "Read" "LS"
+
+claude -p "I want the scripts/github_issues.py to also show a command prompt where I can enter a issue id to get all info about the issue" --allowedTools "Write" "Edit" "Read" "LS"
+
+"I want the scripts/github_issues.py to have an option to execute claude code to fix a selected issue"
+
+"In the scripts/github_issues.py I want to break down the fix function to have two steps: plan and fix. I want to be able to review the plan before giving a go-ahead of the fix"
+
+"In the scripts/github_issues.py When calling claude to plan and fix things, I want it to be able to use all available tools"

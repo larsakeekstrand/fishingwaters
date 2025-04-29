@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GeoJsonFeature } from '../types/GeoJsonTypes';
 import { 
   Paper, 
@@ -7,9 +7,14 @@ import {
   ListItem, 
   ListItemText, 
   Divider,
-  Box
+  Box,
+  TextField,
+  Button,
+  IconButton,
+  InputAdornment
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
@@ -26,6 +31,34 @@ const StyledSidePanel = styled(Paper)(({ theme }) => ({
 }));
 
 const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
+  const [location, setLocation] = useState<string>('');
+  
+  const handleLocationChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLocation(event.target.value);
+  };
+  
+  const getDirectionsUrl = (startLocation: string, endCoordinates: [number, number]) => {
+    // Google Maps uses lat,lng format but our coordinates are in [lng, lat] format
+    const [lng, lat] = endCoordinates;
+    return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(startLocation)}&destination=${lat},${lng}&travelmode=driving`;
+  };
+  
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation(`${latitude},${longitude}`);
+        },
+        (error) => {
+          console.error('Error getting user location:', error);
+        }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser.');
+    }
+  };
+
   if (!selectedLake) {
     return (
       <StyledSidePanel>
@@ -100,6 +133,48 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
           />
         </ListItem>
       </List>
+      
+      <Divider sx={{ my: 2 }} />
+      <Typography variant="h6" gutterBottom>
+        Vägbeskrivning
+      </Typography>
+      <Box sx={{ mt: 2 }}>
+        <TextField
+          fullWidth
+          size="small"
+          label="Min position"
+          variant="outlined"
+          value={location}
+          onChange={handleLocationChange}
+          placeholder="Ange adress eller koordinater"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton 
+                  onClick={getUserLocation}
+                  edge="end"
+                  title="Använd min nuvarande plats"
+                >
+                  <MyLocationIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          sx={{ mb: 1 }}
+        />
+        <Button 
+          variant="contained" 
+          fullWidth
+          color="primary"
+          href={location ? getDirectionsUrl(location, selectedLake.geometry.coordinates) : '#'}
+          target="_blank"
+          rel="noopener noreferrer"
+          disabled={!location}
+          sx={{ mt: 1 }}
+        >
+          Visa vägbeskrivning
+        </Button>
+      </Box>
     </StyledSidePanel>
   );
 };
