@@ -3,6 +3,20 @@ import { render, screen } from '@testing-library/react';
 import SidePanel from '../SidePanel';
 import { GeoJsonFeature } from '../../types/GeoJsonTypes';
 
+// Mock the WeatherDisplay component to simplify testing
+jest.mock('../WeatherDisplay', () => {
+  return {
+    __esModule: true,
+    default: jest.fn().mockImplementation(({ latitude, longitude }) => {
+      return latitude && longitude ? (
+        <div data-testid="weather-display">
+          Weather at {latitude}, {longitude}
+        </div>
+      ) : null;
+    }),
+  };
+});
+
 describe('SidePanel', () => {
   const mockLake: GeoJsonFeature = {
     type: 'Feature',

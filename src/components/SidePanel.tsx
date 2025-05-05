@@ -10,6 +10,7 @@ import {
   Box
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import WeatherDisplay from './WeatherDisplay';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
@@ -44,12 +45,21 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
     return species;
   };
 
+  // Extract coordinates for weather data
+  const coordinates = selectedLake.geometry.coordinates;
+  const longitude = coordinates[0];
+  const latitude = coordinates[1];
+
   return (
     <StyledSidePanel>
       <Typography variant="h5" component="h2" gutterBottom color="primary">
         {selectedLake.properties.name}
       </Typography>
       <Divider sx={{ mb: 2 }} />
+      
+      {/* Weather information */}
+      <WeatherDisplay latitude={latitude} longitude={longitude} />
+      
       <List disablePadding>
         <ListItem sx={{ py: 1 }}>
           <ListItemText 
