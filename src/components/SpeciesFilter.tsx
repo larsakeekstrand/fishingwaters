@@ -82,8 +82,8 @@ const SpeciesFilter: React.FC<SpeciesFilterProps> = ({ features, onFilterChange 
   };
 
   return (
-    <StyledFilterPanel>
-      <Typography variant="subtitle1" color="primary" fontWeight="medium" gutterBottom>
+    <StyledFilterPanel className="filter-panel">
+      <Typography variant="subtitle1" color="primary" fontWeight="medium" gutterBottom className="filter-header">
         Filtrera efter arter
       </Typography>
       
