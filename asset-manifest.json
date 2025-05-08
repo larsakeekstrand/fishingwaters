@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/fishingwaters/static/css/main.4af3b092.css",
-    "main.js": "/fishingwaters/static/js/main.f455db48.js",
+    "main.js": "/fishingwaters/static/js/main.f235d59f.js",
     "index.html": "/fishingwaters/index.html",
     "main.4af3b092.css.map": "/fishingwaters/static/css/main.4af3b092.css.map",
-    "main.f455db48.js.map": "/fishingwaters/static/js/main.f455db48.js.map"
+    "main.f235d59f.js.map": "/fishingwaters/static/js/main.f235d59f.js.map"
   },
   "entrypoints": [
     "static/css/main.4af3b092.css",
-    "static/js/main.f455db48.js"
+    "static/js/main.f235d59f.js"
   ]
 }
