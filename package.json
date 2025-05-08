@@ -13,6 +13,8 @@
     "@types/react": "^18.0.26",
     "@types/react-dom": "^18.0.10",
     "leaflet": "^1.9.4",
+    "nth-check": "^2.1.1",
+    "postcss": "^8.5.3",
     "proj4": "^2.15.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -21,6 +23,7 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
+    "preinstall": "npx npm-force-resolutions",
     "start": "react-scripts start",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
@@ -56,6 +59,13 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/leaflet": "^1.9.8",
     "cypress": "^13.6.6",
-    "gh-pages": "^6.3.0"
+    "gh-pages": "^6.3.0",
+    "npm-force-resolutions": "^0.0.10"
+  },
+  "resolutions": {
+    "nth-check": "^2.1.1",
+    "postcss": "^8.4.31",
+    "svgo": "^2.8.0",
+    "css-select": "^4.2.1"
   }
 }
