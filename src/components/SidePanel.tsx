@@ -9,6 +9,7 @@ import {
   Divider,
   Box
 } from '@mui/material';
+import WeatherInfo from './WeatherInfo';
 import { styled } from '@mui/material/styles';
 
 interface SidePanelProps {
@@ -50,6 +51,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
         {selectedLake.properties.name}
       </Typography>
       <Divider sx={{ mb: 2 }} />
+      
+      {/* Weather information section */}
+      <WeatherInfo selectedLake={selectedLake} />
+      
       <List disablePadding>
         <ListItem sx={{ py: 1 }}>
           <ListItemText 
