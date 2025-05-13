@@ -9,6 +9,7 @@ import {
   Divider,
   Box
 } from '@mui/material';
+import DrivingDirections from './DrivingDirections';
 import { styled } from '@mui/material/styles';
 
 interface SidePanelProps {
@@ -100,6 +101,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
           />
         </ListItem>
       </List>
+      
+      {/* Driving directions section */}
+      <DrivingDirections selectedLake={selectedLake} />
     </StyledSidePanel>
   );
 };
