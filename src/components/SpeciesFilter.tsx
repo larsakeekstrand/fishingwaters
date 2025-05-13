@@ -9,8 +9,11 @@ import {
   Checkbox,
   Stack,
   Divider,
-  Box
+  Box,
+  IconButton
 } from '@mui/material';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { styled } from '@mui/material/styles';
 
 interface SpeciesFilterProps {
@@ -28,12 +31,26 @@ const StyledFilterPanel = styled(Paper)(({ theme }) => ({
   overflow: 'auto',
   width: 250,
   boxShadow: theme.shadows[3],
-  borderRadius: theme.shape.borderRadius
+  borderRadius: theme.shape.borderRadius,
+  transition: 'transform 0.3s ease-in-out'
+}));
+
+const MinimizedPanel = styled(Paper)(({ theme }) => ({
+  position: 'absolute',
+  top: theme.spacing(2),
+  right: theme.spacing(2),
+  padding: theme.spacing(1),
+  zIndex: 1000,
+  boxShadow: theme.shadows[3],
+  borderRadius: theme.shape.borderRadius,
+  display: 'flex',
+  alignItems: 'center'
 }));
 
 const SpeciesFilter: React.FC<SpeciesFilterProps> = ({ features, onFilterChange }) => {
   const [uniqueSpecies, setUniqueSpecies] = useState<string[]>([]);
   const [selectedSpecies, setSelectedSpecies] = useState<Set<string>>(new Set());
+  const [minimized, setMinimized] = useState<boolean>(false);
 
   useEffect(() => {
     const speciesSet = new Set<string>();
@@ -81,11 +98,44 @@ const SpeciesFilter: React.FC<SpeciesFilterProps> = ({ features, onFilterChange 
     onFilterChange(new Set());
   };
 
+  const toggleMinimized = () => {
+    setMinimized(!minimized);
+  };
+
+  if (minimized) {
+    return (
+      <MinimizedPanel className="filter-panel-minimized">
+        <IconButton 
+          onClick={toggleMinimized}
+          aria-label="Expand filter panel"
+          title="Visa filterpanel"
+          color="primary"
+        >
+          <ChevronLeftIcon />
+        </IconButton>
+        <Typography variant="subtitle2" color="primary" sx={{ ml: 1 }}>
+          {selectedSpecies.size > 0 ? `${selectedSpecies.size} arter valda` : 'Filter'}
+        </Typography>
+      </MinimizedPanel>
+    );
+  }
+
   return (
     <StyledFilterPanel className="filter-panel">
-      <Typography variant="subtitle1" color="primary" fontWeight="medium" gutterBottom className="filter-header">
-        Filtrera efter arter
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+        <Typography variant="subtitle1" color="primary" fontWeight="medium" className="filter-header">
+          Filtrera efter arter
+        </Typography>
+        <IconButton 
+          onClick={toggleMinimized}
+          aria-label="Minimize filter panel"
+          title="Minimera filterpanel"
+          size="small"
+          color="primary"
+        >
+          <ChevronRightIcon />
+        </IconButton>
+      </Box>
       
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <Button 

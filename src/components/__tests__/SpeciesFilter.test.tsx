@@ -4,6 +4,10 @@ import '@testing-library/jest-dom';
 import SpeciesFilter from '../SpeciesFilter';
 import { GeoJsonFeature } from '../../types/GeoJsonTypes';
 
+// Mock the MUI icons
+jest.mock('@mui/icons-material/ChevronRight', () => () => <div data-testid="chevron-right-icon" />);
+jest.mock('@mui/icons-material/ChevronLeft', () => () => <div data-testid="chevron-left-icon" />);
+
 describe('SpeciesFilter', () => {
   const mockOnFilterChange = jest.fn();
 
@@ -174,5 +178,66 @@ describe('SpeciesFilter', () => {
     
     const checkboxes = screen.queryAllByRole('checkbox');
     expect(checkboxes).toHaveLength(0);
+  });
+
+  it('renders a minimize button in the expanded state', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    const minimizeButton = screen.getByTitle('Minimera filterpanel');
+    expect(minimizeButton).toBeInTheDocument();
+  });
+
+  it('minimizes the panel when minimize button is clicked', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    const minimizeButton = screen.getByTitle('Minimera filterpanel');
+    fireEvent.click(minimizeButton);
+    
+    // Panel should be minimized, expand button should be visible
+    expect(screen.queryByText('Filtrera efter arter')).not.toBeInTheDocument();
+    const expandButton = screen.getByTitle('Visa filterpanel');
+    expect(expandButton).toBeInTheDocument();
+    expect(screen.getByText('Filter')).toBeInTheDocument();
+  });
+
+  it('expands the panel when expand button is clicked', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // First minimize
+    const minimizeButton = screen.getByTitle('Minimera filterpanel');
+    fireEvent.click(minimizeButton);
+    
+    // Then expand
+    const expandButton = screen.getByTitle('Visa filterpanel');
+    fireEvent.click(expandButton);
+    
+    // Panel should be expanded again
+    expect(screen.getByText('Filtrera efter arter')).toBeInTheDocument();
+    expect(screen.queryByTitle('Visa filterpanel')).not.toBeInTheDocument();
+  });
+
+  it('shows the number of selected species in minimized state', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre', 'Gös'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // Select two species
+    const gaddaCheckbox = screen.getByLabelText('Gädda') as HTMLInputElement;
+    const abborreCheckbox = screen.getByLabelText('Abborre') as HTMLInputElement;
+    fireEvent.click(gaddaCheckbox);
+    fireEvent.click(abborreCheckbox);
+    
+    // Minimize the panel
+    const minimizeButton = screen.getByTitle('Minimera filterpanel');
+    fireEvent.click(minimizeButton);
+    
+    // Check that the minimized panel shows the correct count
+    expect(screen.getByText('2 arter valda')).toBeInTheDocument();
   });
 });
