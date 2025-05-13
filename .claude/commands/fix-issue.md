@@ -1,1 +1,9 @@
-Find and fix issue # that you can find in github issues using the gh command. Follow these steps: 1. Understand the issue described in the ticket 2. Create a new branch before working on the issue 3. Locate the relevant code in our codebase 4. Implement a solution that addresses the root cause 5. Add appropriate tests and run all tests 6. Prepare a concise PR description 7. Create a PR and push to github 8. Change back to main branch
+Find and fix issue # that you can find in github issues using the gh command. Follow these steps: 
+1. Understand the issue described in the ticket 
+2. Create a new branch before working on the issue 
+3. Locate the relevant code in our codebase 
+4. Implement a solution that addresses the root cause 
+5. Add appropriate tests and run all tests 
+6. Prepare a concise PR description 
+7. Create a PR and push to github 
+8. Change back to main branch
