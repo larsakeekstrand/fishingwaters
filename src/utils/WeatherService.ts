@@ -79,7 +79,7 @@ export const fetchWeatherData = async (feature: GeoJsonFeature): Promise<Weather
 /**
  * Map weather symbols to human-readable descriptions
  */
-const getWeatherDescription = (symbolCode?: string): string => {
+export const getWeatherDescription = (symbolCode?: string): string => {
   if (!symbolCode) return 'Okänd';
   
   const descriptions: Record<string, string> = {
@@ -116,8 +116,7 @@ const getWeatherDescription = (symbolCode?: string): string => {
     'lightsleet': 'Lätt slask',
     'heavysleet': 'Kraftig slask',
     'lightsnow': 'Lätt snö',
-    'lightrain': 'Lätt regn',
-    'heavyrain': 'Kraftigt regn',
+    'lightrain': 'Lätt regn'
   };
 
   // Handle day/night/polar variations
@@ -128,7 +127,7 @@ const getWeatherDescription = (symbolCode?: string): string => {
 /**
  * Calculate "feels like" temperature based on temperature, wind speed, and humidity
  */
-const calculateFeelsLike = (temperature: number, windSpeed: number, humidity: number): number => {
+export const calculateFeelsLike = (temperature: number, windSpeed: number, humidity: number): number => {
   // Simple wind chill calculation for cold temperatures
   if (temperature < 10) {
     return Math.round((13.12 + 0.6215 * temperature - 11.37 * Math.pow(windSpeed, 0.16) + 

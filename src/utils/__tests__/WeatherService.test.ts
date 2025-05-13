@@ -1,4 +1,4 @@
-import { fetchWeatherData } from '../WeatherService';
+import { fetchWeatherData, calculateFeelsLike, getWeatherDescription } from '../WeatherService';
 import { GeoJsonFeature } from '../../types/GeoJsonTypes';
 
 // Mock fetch
@@ -111,6 +111,73 @@ describe('WeatherService', () => {
 
     expect(result).toEqual({
       errorMessage: 'Network error'
+    });
+  });
+
+  describe('calculateFeelsLike', () => {
+    it('should calculate wind chill for cold temperatures', () => {
+      const temperature = 5; // °C
+      const windSpeed = 8; // m/s
+      const humidity = 60; // %
+      
+      const result = calculateFeelsLike(temperature, windSpeed, humidity);
+      
+      // The result should be less than the actual temperature due to wind chill
+      expect(result).toBeLessThan(temperature);
+      expect(result).toBeCloseTo(3.1, 1); // Allows a tolerance of 0.1
+    });
+
+    it('should calculate heat index for warm temperatures with high humidity', () => {
+      const temperature = 25; // °C
+      const windSpeed = 2; // m/s
+      const humidity = 70; // %
+      
+      const result = calculateFeelsLike(temperature, windSpeed, humidity);
+      
+      // The result should be greater than the actual temperature due to humidity
+      expect(result).toBeGreaterThan(temperature);
+      expect(result).toBeCloseTo(26.0, 1); // Allows a tolerance of 0.1
+    });
+
+    it('should return actual temperature for moderate conditions', () => {
+      const temperature = 15; // °C
+      const windSpeed = 3; // m/s
+      const humidity = 30; // %
+      
+      const result = calculateFeelsLike(temperature, windSpeed, humidity);
+      
+      // For moderate temperatures, should return the same temperature
+      expect(result).toBe(temperature);
+    });
+  });
+
+  describe('getWeatherDescription', () => {
+    it('should return the correct description for common weather symbols', () => {
+      expect(getWeatherDescription('clearsky')).toBe('Klart');
+      expect(getWeatherDescription('fair')).toBe('Uppehåll');
+      expect(getWeatherDescription('partlycloudy')).toBe('Delvis moln');
+      expect(getWeatherDescription('cloudy')).toBe('Molnigt');
+      expect(getWeatherDescription('rain')).toBe('Regn');
+      expect(getWeatherDescription('snow')).toBe('Snö');
+    });
+
+    it('should handle day/night variations of weather symbols', () => {
+      // Day variation
+      expect(getWeatherDescription('clearsky_day')).toBe('Klart');
+      // Night variation
+      expect(getWeatherDescription('clearsky_night')).toBe('Klart');
+      // Polar variation
+      expect(getWeatherDescription('clearsky_polartwilight')).toBe('Klart');
+    });
+
+    it('should handle complex weather symbols', () => {
+      expect(getWeatherDescription('rainshowersandthunder')).toBe('Regnskurar och åska');
+      expect(getWeatherDescription('heavyrainshowersandthunder')).toBe('Kraftiga regnskurar och åska');
+    });
+
+    it('should return "Okänd" for undefined or unknown weather symbols', () => {
+      expect(getWeatherDescription(undefined)).toBe('Okänd');
+      expect(getWeatherDescription('not_a_valid_symbol')).toBe('Okänd');
     });
   });
 });

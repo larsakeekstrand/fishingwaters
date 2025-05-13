@@ -131,4 +131,61 @@ describe('WeatherInfo', () => {
     
     expect(screen.getByText('Failed to fetch weather data')).toBeInTheDocument();
   });
+
+  describe('Wind Direction Tests', () => {
+    // Since getWindDirection is a private function in the component,
+    // we'll test it by rendering the component with different wind directions
+    // and checking the resulting output
+    
+    const testWindDirections = [
+      { degrees: 0, expected: 'N' },     // North
+      { degrees: 45, expected: 'NO' },   // Northeast
+      { degrees: 90, expected: 'O' },    // East
+      { degrees: 135, expected: 'SO' },  // Southeast
+      { degrees: 180, expected: 'S' },   // South
+      { degrees: 225, expected: 'SV' },  // Southwest
+      { degrees: 270, expected: 'V' },   // West
+      { degrees: 315, expected: 'NV' },  // Northwest
+      { degrees: 360, expected: 'N' }    // Full circle back to North
+    ];
+    
+    testWindDirections.forEach(({ degrees, expected }) => {
+      it(`should display correct wind direction for ${degrees} degrees (${expected})`, async () => {
+        // Mock weather data with specific wind direction
+        jest.spyOn(WeatherService, 'fetchWeatherData').mockResolvedValue({
+          ...mockWeatherData,
+          windDirection: degrees
+        });
+        
+        render(<WeatherInfo selectedLake={mockLake} />);
+        
+        // Wait for data to load
+        await waitFor(() => {
+          expect(screen.queryByText('Hämtar väderdata...')).not.toBeInTheDocument();
+        });
+        
+        // Verify the correct wind direction is displayed
+        // Text format should be: "5.5 m/s X" where X is the direction
+        expect(screen.getByText(`5.5 m/s ${expected}`)).toBeInTheDocument();
+      });
+    });
+    
+    it('should handle undefined wind direction', async () => {
+      // Mock weather data with undefined wind direction
+      jest.spyOn(WeatherService, 'fetchWeatherData').mockResolvedValue({
+        ...mockWeatherData,
+        windDirection: undefined
+      });
+      
+      render(<WeatherInfo selectedLake={mockLake} />);
+      
+      // Wait for data to load
+      await waitFor(() => {
+        expect(screen.queryByText('Hämtar väderdata...')).not.toBeInTheDocument();
+      });
+      
+      // Verify the fallback "Okänd" is used
+      expect(screen.getByText('5.5 m/s Okänd')).toBeInTheDocument();
+    });
+  });
 });
