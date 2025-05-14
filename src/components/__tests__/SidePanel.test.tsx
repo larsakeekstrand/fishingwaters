@@ -41,4 +41,28 @@ describe('SidePanel', () => {
     expect(screen.getByText('Perch (40%)')).toBeInTheDocument();
     expect(screen.getByText('2023')).toBeInTheDocument();
   });
+  
+  it('displays the directions button', () => {
+    render(<SidePanel selectedLake={mockLake} />);
+    expect(screen.getByText('Vägbeskrivning')).toBeInTheDocument();
+  });
+  
+  it('has a button that opens Google Maps directions', () => {
+    // Mock window.open
+    const windowOpenMock = jest.fn();
+    Object.defineProperty(window, 'open', {
+      value: windowOpenMock,
+      writable: true
+    });
+    
+    render(<SidePanel selectedLake={mockLake} />);
+    
+    // Click the directions button
+    screen.getByText('Vägbeskrivning').click();
+    
+    // Check if window.open was called with the correct URL
+    expect(windowOpenMock).toHaveBeenCalledTimes(1);
+    expect(windowOpenMock.mock.calls[0][0]).toContain('https://www.google.com/maps/dir/?api=1&destination=59.3293,18.0686');
+    expect(windowOpenMock.mock.calls[0][1]).toBe('_blank');
+  });
 });

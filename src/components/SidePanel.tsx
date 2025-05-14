@@ -7,8 +7,10 @@ import {
   ListItem, 
   ListItemText, 
   Divider,
-  Box
+  Box,
+  Button
 } from '@mui/material';
+import DirectionsIcon from '@mui/icons-material/Directions';
 import { styled } from '@mui/material/styles';
 
 interface SidePanelProps {
@@ -43,12 +45,41 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
     if (Array.isArray(species)) return species.join(', ');
     return species;
   };
+  
+  // Generate Google Maps directions URL
+  const getDirectionsUrl = (): string => {
+    const { coordinates } = selectedLake.geometry;
+    // GeoJSON uses [longitude, latitude] format, but Google Maps uses latitude,longitude
+    const [longitude, latitude] = coordinates;
+    const destination = `${latitude},${longitude}`;
+    const lakeName = encodeURIComponent(selectedLake.properties.name);
+    
+    // Create URL with destination coordinates and lake name as a parameter
+    return `https://www.google.com/maps/dir/?api=1&destination=${destination}&destination_place_id=${lakeName}`;
+  };
+  
+  // Open Google Maps in a new tab
+  const openDirections = () => {
+    window.open(getDirectionsUrl(), '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <StyledSidePanel>
-      <Typography variant="h5" component="h2" gutterBottom color="primary">
-        {selectedLake.properties.name}
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+        <Typography variant="h5" component="h2" color="primary">
+          {selectedLake.properties.name}
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          startIcon={<DirectionsIcon />}
+          onClick={openDirections}
+          title="Öppna vägbeskrivning i Google Maps"
+        >
+          Vägbeskrivning
+        </Button>
+      </Box>
       <Divider sx={{ mb: 2 }} />
       <List disablePadding>
         <ListItem sx={{ py: 1 }}>
