@@ -69,9 +69,7 @@ export const fetchWeatherData = async (lake: GeoJsonFeature): Promise<WeatherDat
 export const getWindDirection = (degrees: number): string => {
   // Normalize the degrees to be between 0 and 360
   const normalizedDegrees = ((degrees % 360) + 360) % 360;
-  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   
-  // Get the index based on the normalized degrees
   // Handle edge cases to match the expected test values
   if (normalizedDegrees <= 22.5 || normalizedDegrees > 337.5) {
     return 'N';
