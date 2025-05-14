@@ -28,6 +28,12 @@ const StyledSidePanel = styled(Paper)(({ theme }) => ({
 }));
 
 const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
+  // Initialize weather data with default values
+  const { temperature, windSpeed, weatherDescription, isLoading, error } = useWeatherData(
+    selectedLake?.geometry?.coordinates?.[1] || 0,
+    selectedLake?.geometry?.coordinates?.[0] || 0
+  );
+  
   if (!selectedLake) {
     return (
       <StyledSidePanel>
@@ -45,14 +51,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
     if (Array.isArray(species)) return species.join(', ');
     return species;
   };
-
-  // Extract coordinates from the selected lake's geometry
-  const { coordinates } = selectedLake.geometry;
-  // GeoJSON uses [longitude, latitude] format, but our weather API needs [latitude, longitude]
-  const [longitude, latitude] = coordinates;
-  
-  // Fetch weather data for the lake coordinates
-  const { temperature, windSpeed, weatherDescription, isLoading, error } = useWeatherData(latitude, longitude);
 
   return (
     <StyledSidePanel>
