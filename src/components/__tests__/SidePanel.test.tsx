@@ -3,6 +3,18 @@ import { render, screen } from '@testing-library/react';
 import SidePanel from '../SidePanel';
 import { GeoJsonFeature } from '../../types/GeoJsonTypes';
 
+// Mock the weather service hook
+jest.mock('../../utils/weatherService', () => ({
+  useWeatherData: () => ({
+    temperature: 15,
+    windSpeed: 5,
+    weatherCode: 0,
+    weatherDescription: 'Klar himmel',
+    isLoading: false,
+    error: null
+  })
+}));
+
 describe('SidePanel', () => {
   const mockLake: GeoJsonFeature = {
     type: 'Feature',
@@ -40,5 +52,13 @@ describe('SidePanel', () => {
     expect(screen.getByText('Pike (60%)')).toBeInTheDocument();
     expect(screen.getByText('Perch (40%)')).toBeInTheDocument();
     expect(screen.getByText('2023')).toBeInTheDocument();
+  });
+  
+  it('displays weather information section', () => {
+    render(<SidePanel selectedLake={mockLake} />);
+    
+    expect(screen.getByText('Aktuellt väder')).toBeInTheDocument();
+    expect(screen.getByText('Klar himmel, 15°C')).toBeInTheDocument();
+    expect(screen.getByText('Vindhastighet: 5 m/s')).toBeInTheDocument();
   });
 });

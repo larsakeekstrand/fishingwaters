@@ -7,9 +7,11 @@ import {
   ListItem, 
   ListItemText, 
   Divider,
-  Box
+  Box,
+  CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useWeatherData } from '../utils/weatherService';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
@@ -44,6 +46,14 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
     return species;
   };
 
+  // Extract coordinates from the selected lake's geometry
+  const { coordinates } = selectedLake.geometry;
+  // GeoJSON uses [longitude, latitude] format, but our weather API needs [latitude, longitude]
+  const [longitude, latitude] = coordinates;
+  
+  // Fetch weather data for the lake coordinates
+  const { temperature, windSpeed, weatherDescription, isLoading, error } = useWeatherData(latitude, longitude);
+
   return (
     <StyledSidePanel>
       <Typography variant="h5" component="h2" gutterBottom color="primary">
@@ -51,6 +61,36 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
       </Typography>
       <Divider sx={{ mb: 2 }} />
       <List disablePadding>
+        {/* Weather section */}
+        <ListItem>
+          <Box width="100%">
+            <Typography variant="subtitle1" color="primary" gutterBottom>
+              Aktuellt väder
+            </Typography>
+            
+            {isLoading ? (
+              <Box display="flex" alignItems="center" mt={1}>
+                <CircularProgress size={20} sx={{ mr: 1 }} />
+                <Typography variant="body2">Laddar väderdata...</Typography>
+              </Box>
+            ) : error ? (
+              <Typography variant="body2" color="error">
+                Kunde inte ladda väderdata: {error}
+              </Typography>
+            ) : (
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="body2">
+                  {weatherDescription}, {temperature}°C
+                </Typography>
+                <Typography variant="body2">
+                  Vindhastighet: {windSpeed} m/s
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </ListItem>
+        <Divider sx={{ my: 1 }} />
+        
         <ListItem sx={{ py: 1 }}>
           <ListItemText 
             primary="Maxdjup" 
