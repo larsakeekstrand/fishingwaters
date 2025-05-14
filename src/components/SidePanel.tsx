@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { GeoJsonFeature } from '../types/GeoJsonTypes';
 import { 
   Paper, 
@@ -7,9 +7,11 @@ import {
   ListItem, 
   ListItemText, 
   Divider,
-  Box
+  Box,
+  CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { fetchWeatherData, WeatherData } from '../utils/weatherService';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
@@ -26,6 +28,29 @@ const StyledSidePanel = styled(Paper)(({ theme }) => ({
 }));
 
 const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedLake) {
+      setLoading(true);
+      setError(null);
+      setWeatherData(null);
+      
+      fetchWeatherData(selectedLake)
+        .then(data => {
+          setWeatherData(data);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching weather data:', err);
+          setError('Kunde inte hämta väderdata');
+          setLoading(false);
+        });
+    }
+  }, [selectedLake]);
+
   if (!selectedLake) {
     return (
       <StyledSidePanel>
@@ -44,12 +69,62 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
     return species;
   };
 
+  const renderWeatherInfo = () => {
+    if (loading) {
+      return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+          <CircularProgress size={24} />
+        </Box>
+      );
+    }
+
+    if (error) {
+      return (
+        <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+          {error}
+        </Typography>
+      );
+    }
+
+    if (!weatherData) return null;
+
+    return (
+      <Box sx={{ my: 2 }}>
+        <Typography variant="subtitle1" component="h3" fontWeight="bold" sx={{ mb: 1 }}>
+          Aktuellt väder
+        </Typography>
+        <Typography variant="body1">
+          {weatherData.weatherDescription}
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 1 }}>
+          <Typography variant="body2">
+            Temperatur: {weatherData.temperature}°C
+          </Typography>
+          <Typography variant="body2">
+            Vind: {weatherData.windSpeed} m/s {weatherData.windDirection}
+          </Typography>
+          <Typography variant="body2">
+            Nederbörd: {weatherData.precipitation} mm
+          </Typography>
+          <Typography variant="body2">
+            Luftfuktighet: {Math.round(weatherData.humidity)}%
+          </Typography>
+        </Box>
+      </Box>
+    );
+  };
+
   return (
     <StyledSidePanel>
       <Typography variant="h5" component="h2" gutterBottom color="primary">
         {selectedLake.properties.name}
       </Typography>
       <Divider sx={{ mb: 2 }} />
+      
+      {renderWeatherInfo()}
+      
+      <Divider sx={{ my: 2 }} />
+      
       <List disablePadding>
         <ListItem sx={{ py: 1 }}>
           <ListItemText 
