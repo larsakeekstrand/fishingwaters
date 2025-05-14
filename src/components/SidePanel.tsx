@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { GeoJsonFeature } from '../types/GeoJsonTypes';
 import { 
   Paper, 
@@ -7,9 +7,14 @@ import {
   ListItem, 
   ListItemText, 
   Divider,
-  Box
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  Icon
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { fetchWeatherData, WeatherInfo, getWeatherIcon } from '../utils/weatherService';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
@@ -25,7 +30,51 @@ const StyledSidePanel = styled(Paper)(({ theme }) => ({
   position: 'relative'
 }));
 
+const WeatherCard = styled(Card)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+  backgroundColor: theme.palette.primary.light,
+  color: theme.palette.primary.contrastText
+}));
+
+const WeatherContent = styled(CardContent)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  padding: theme.spacing(2)
+}));
+
+const WeatherRow = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  width: '100%',
+  marginTop: theme.spacing(1)
+}));
+
 const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
+  const [weatherInfo, setWeatherInfo] = useState<WeatherInfo | null>(null);
+  const [isLoadingWeather, setIsLoadingWeather] = useState<boolean>(false);
+
+  useEffect(() => {
+    async function getWeatherData() {
+      if (selectedLake) {
+        setIsLoadingWeather(true);
+        try {
+          const data = await fetchWeatherData(selectedLake);
+          setWeatherInfo(data);
+        } catch (error) {
+          console.error('Error fetching weather data:', error);
+          setWeatherInfo(null);
+        } finally {
+          setIsLoadingWeather(false);
+        }
+      } else {
+        setWeatherInfo(null);
+      }
+    }
+
+    getWeatherData();
+  }, [selectedLake]);
+
   if (!selectedLake) {
     return (
       <StyledSidePanel>
@@ -50,6 +99,50 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
         {selectedLake.properties.name}
       </Typography>
       <Divider sx={{ mb: 2 }} />
+      
+      {/* Weather Card */}
+      <WeatherCard>
+        <WeatherContent>
+          <Typography variant="h6" component="div" gutterBottom>
+            Väder
+          </Typography>
+          
+          {isLoadingWeather ? (
+            <CircularProgress size={40} color="inherit" />
+          ) : weatherInfo ? (
+            <>
+              <Box display="flex" alignItems="center" mb={1}>
+                <Icon sx={{ fontSize: 40, mr: 1 }}>{getWeatherIcon(weatherInfo.symbolCode)}</Icon>
+                <Typography variant="h4">{Math.round(weatherInfo.temperature)}°C</Typography>
+              </Box>
+              
+              <Typography variant="caption" sx={{ mb: 2 }}>
+                {weatherInfo.time}
+              </Typography>
+              
+              <WeatherRow>
+                <Typography variant="body2">Vind:</Typography>
+                <Typography variant="body2">{weatherInfo.windSpeed} m/s</Typography>
+              </WeatherRow>
+              
+              <WeatherRow>
+                <Typography variant="body2">Luftfuktighet:</Typography>
+                <Typography variant="body2">{weatherInfo.humidity}%</Typography>
+              </WeatherRow>
+              
+              <WeatherRow>
+                <Typography variant="body2">Nederbörd:</Typography>
+                <Typography variant="body2">{weatherInfo.precipitation} mm</Typography>
+              </WeatherRow>
+            </>
+          ) : (
+            <Typography variant="body2">
+              Väderinformation kunde inte hämtas
+            </Typography>
+          )}
+        </WeatherContent>
+      </WeatherCard>
+      
       <List disablePadding>
         <ListItem sx={{ py: 1 }}>
           <ListItemText 
