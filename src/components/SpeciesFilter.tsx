@@ -9,9 +9,12 @@ import {
   Checkbox,
   Stack,
   Divider,
-  Box
+  Box,
+  IconButton
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import MinimizeIcon from '@mui/icons-material/Minimize';
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 
 interface SpeciesFilterProps {
   features: GeoJsonFeature[];
@@ -34,6 +37,7 @@ const StyledFilterPanel = styled(Paper)(({ theme }) => ({
 const SpeciesFilter: React.FC<SpeciesFilterProps> = ({ features, onFilterChange }) => {
   const [uniqueSpecies, setUniqueSpecies] = useState<string[]>([]);
   const [selectedSpecies, setSelectedSpecies] = useState<Set<string>>(new Set());
+  const [isMinimized, setIsMinimized] = useState<boolean>(false);
 
   useEffect(() => {
     const speciesSet = new Set<string>();
@@ -80,55 +84,73 @@ const SpeciesFilter: React.FC<SpeciesFilterProps> = ({ features, onFilterChange 
     setSelectedSpecies(new Set());
     onFilterChange(new Set());
   };
+  
+  const toggleMinimize = () => {
+    setIsMinimized(!isMinimized);
+  };
 
   return (
     <StyledFilterPanel className="filter-panel">
-      <Typography variant="subtitle1" color="primary" fontWeight="medium" gutterBottom className="filter-header">
-        Filtrera efter arter
-      </Typography>
-      
-      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-        <Button 
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+        <Typography variant="subtitle1" color="primary" fontWeight="medium" className="filter-header">
+          Filtrera efter arter
+        </Typography>
+        <IconButton 
           size="small" 
-          variant="outlined" 
-          onClick={handleSelectAll}
-          color="primary"
+          onClick={toggleMinimize} 
+          aria-label={isMinimized ? "Expand" : "Minimize"}
+          title={isMinimized ? "Expand" : "Minimize"}
         >
-          Välj alla
-        </Button>
-        <Button 
-          size="small" 
-          variant="outlined" 
-          onClick={handleClearAll}
-          color="secondary"
-        >
-          Rensa alla
-        </Button>
-      </Stack>
-      
-      <Divider sx={{ mb: 2 }} />
-      
-      <Box sx={{ maxHeight: '60vh', overflow: 'auto' }}>
-        <FormGroup>
-          {uniqueSpecies.map(species => (
-            <FormControlLabel
-              key={species}
-              control={
-                <Checkbox
-                  checked={selectedSpecies.has(species)}
-                  onChange={(e) => handleCheckboxChange(species, e.target.checked)}
-                  size="small"
-                  color="primary"
-                />
-              }
-              label={
-                <Typography variant="body2">{species}</Typography>
-              }
-              sx={{ mb: 0.5 }}
-            />
-          ))}
-        </FormGroup>
+          {isMinimized ? <OpenInFullIcon fontSize="small" /> : <MinimizeIcon fontSize="small" />}
+        </IconButton>
       </Box>
+      
+      {!isMinimized && (
+        <>
+          <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+            <Button 
+              size="small" 
+              variant="outlined" 
+              onClick={handleSelectAll}
+              color="primary"
+            >
+              Välj alla
+            </Button>
+            <Button 
+              size="small" 
+              variant="outlined" 
+              onClick={handleClearAll}
+              color="secondary"
+            >
+              Rensa alla
+            </Button>
+          </Stack>
+          
+          <Divider sx={{ mb: 2 }} />
+          
+          <Box sx={{ maxHeight: '60vh', overflow: 'auto' }}>
+            <FormGroup>
+              {uniqueSpecies.map(species => (
+                <FormControlLabel
+                  key={species}
+                  control={
+                    <Checkbox
+                      checked={selectedSpecies.has(species)}
+                      onChange={(e) => handleCheckboxChange(species, e.target.checked)}
+                      size="small"
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2">{species}</Typography>
+                  }
+                  sx={{ mb: 0.5 }}
+                />
+              ))}
+            </FormGroup>
+          </Box>
+        </>
+      )}
     </StyledFilterPanel>
   );
 };
