@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SpeciesFilter from '../SpeciesFilter';
 import { GeoJsonFeature } from '../../types/GeoJsonTypes';
@@ -174,5 +174,47 @@ describe('SpeciesFilter', () => {
     
     const checkboxes = screen.queryAllByRole('checkbox');
     expect(checkboxes).toHaveLength(0);
+  });
+
+  it('renders with minimize button', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // Check that the filter header and minimize button are present
+    expect(screen.getByText('Filtrera efter arter')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /minimera/i })).toBeInTheDocument();
+  });
+
+  it('minimizes and maximizes the panel when button is clicked', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // Initially the panel should be expanded
+    expect(screen.getByText('Filtrera efter arter')).toBeInTheDocument();
+    expect(screen.getByText('Välj alla')).toBeInTheDocument();
+    expect(screen.getByText('Rensa alla')).toBeInTheDocument();
+    
+    // Click the minimize button
+    const minimizeButton = screen.getByRole('button', { name: /minimera/i });
+    fireEvent.click(minimizeButton);
+    
+    // After minimizing, content should be hidden
+    expect(screen.queryByText('Filtrera efter arter')).not.toBeInTheDocument();
+    expect(screen.queryByText('Välj alla')).not.toBeInTheDocument();
+    expect(screen.queryByText('Rensa alla')).not.toBeInTheDocument();
+    
+    // But expand button should be visible
+    expect(screen.getByRole('button', { name: /expandera/i })).toBeInTheDocument();
+    
+    // Click the expand button
+    const expandButton = screen.getByRole('button', { name: /expandera/i });
+    fireEvent.click(expandButton);
+    
+    // After expanding, content should be visible again
+    expect(screen.getByText('Filtrera efter arter')).toBeInTheDocument();
+    expect(screen.getByText('Välj alla')).toBeInTheDocument();
+    expect(screen.getByText('Rensa alla')).toBeInTheDocument();
   });
 });
