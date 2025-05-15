@@ -10,8 +10,16 @@ jest.mock('react-leaflet', () => ({
     <div data-testid="map-container">{children}</div>
   ),
   TileLayer: () => <div data-testid="tile-layer" />,
-  CircleMarker: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="circle-marker">{children}</div>
+  CircleMarker: ({ children, pathOptions }: { 
+    children: React.ReactNode, 
+    pathOptions: { fillColor: string }
+  }) => (
+    <div 
+      data-testid="circle-marker" 
+      data-fill-color={pathOptions.fillColor}
+    >
+      {children}
+    </div>
   ),
   Tooltip: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="tooltip">{children}</div>
@@ -203,7 +211,7 @@ describe('Map', () => {
     expect(tooltip).toHaveTextContent('Näst vanligaste art: Abborre (30%)');
   });
 
-  it('renders all markers in blue color', () => {
+  it('renders all markers in blue color when no filter is applied', () => {
     const features = [
       createMockFeature('Lake 1', [18.0579, 59.3293], ['Gädda', 'Abborre']),
       createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös', 'Abborre'])
@@ -215,8 +223,50 @@ describe('Map', () => {
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(2);
 
-    // Since we're using mocked components, we can't directly test the color
-    // but this test ensures the code path is covered
+    // Check that all markers have blue color
+    markers.forEach(marker => {
+      expect(marker).toHaveAttribute('data-fill-color', '#3388ff');
+    });
+  });
+  
+  it('renders markers in red color when they match the filter criteria', () => {
+    const features = [
+      createMockFeature('Lake 1', [18.0579, 59.3293], ['Gädda', 'Abborre']),
+      createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös']),
+      createMockFeature('Lake 3', [16.0579, 57.3293], ['Abborre'])
+    ];
+    const data = createMockData(features);
+
+    // We're setting Gädda and Abborre as filters, so Lake 1 and Lake 3 should be shown
+    // and they should be colored red
+    render(<Map data={data} filteredSpecies={new Set(['Gädda', 'Abborre'])} />);
+
+    const markers = screen.getAllByTestId('circle-marker');
+    expect(markers).toHaveLength(2); // Only lakes with Gädda or Abborre should be visible
+    
+    // These markers should have the red color (#ff3333)
+    expect(markers[0]).toHaveAttribute('data-fill-color', '#ff3333'); // Lake 1 (has Gädda, Abborre)
+    expect(markers[1]).toHaveAttribute('data-fill-color', '#ff3333'); // Lake 3 (has Abborre)
+  });
+  
+  it('renders markers with mixed colors when some match filter criteria and others dont', () => {
+    const features = [
+      createMockFeature('Lake 1', [18.0579, 59.3293], ['Gädda', 'Abborre', 'Gös']),
+      createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös']),
+      createMockFeature('Lake 3', [16.0579, 57.3293], ['Abborre', 'Gös'])
+    ];
+    const data = createMockData(features);
+
+    // Only filter on Gös, so all lakes should be visible
+    render(<Map data={data} filteredSpecies={new Set(['Gös'])} />);
+
+    const markers = screen.getAllByTestId('circle-marker');
+    expect(markers).toHaveLength(3); // All lakes have Gös and should be visible
+    
+    // All markers should have the red color (#ff3333) since they all match the filter
+    markers.forEach(marker => {
+      expect(marker).toHaveAttribute('data-fill-color', '#ff3333');
+    });
   });
 
   it('handles missing or null values in tooltip', () => {

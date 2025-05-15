@@ -52,6 +52,29 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
     return typeof species === 'string' ? species : 'Inga rapporterade';
   };
 
+  // Check if a feature matches the filter criteria
+  const featureMatchesFilter = (feature: GeoJsonFeature): boolean => {
+    if (filteredSpecies.size === 0) return false;
+    
+    const hasAnySelectedSpecies = (featureSpecies: string[] | string | undefined) => {
+      if (!featureSpecies) return false;
+      
+      if (Array.isArray(featureSpecies)) {
+        return featureSpecies.some(s => filteredSpecies.has(s));
+      } else if (typeof featureSpecies === 'string') {
+        if (featureSpecies.includes(',')) {
+          return featureSpecies.split(',').map(s => s.trim())
+            .some(s => filteredSpecies.has(s));
+        }
+        return filteredSpecies.has(featureSpecies);
+      }
+      return false;
+    };
+    
+    return hasAnySelectedSpecies(feature.properties.catchedSpecies) || 
+           hasAnySelectedSpecies(feature.properties.fångadeArter);
+  };
+
   return (
     <MapContainer center={swedenCenter} zoom={5} style={{ height: '100vh', width: '100%' }}>
       <TileLayer
@@ -64,7 +87,8 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
         // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]
         const position: [number, number] = [coordinates[1], coordinates[0]]; 
         
-        const fillColor = '#3388ff';
+        // Use red color when feature matches filter, blue otherwise
+        const fillColor = featureMatchesFilter(feature) ? '#ff3333' : '#3388ff';
         
         return (
           <CircleMarker 
