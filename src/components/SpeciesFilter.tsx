@@ -9,9 +9,13 @@ import {
   Checkbox,
   Stack,
   Divider,
-  Box
+  Box,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 
 interface SpeciesFilterProps {
   features: GeoJsonFeature[];
@@ -28,12 +32,35 @@ const StyledFilterPanel = styled(Paper)(({ theme }) => ({
   overflow: 'auto',
   width: 250,
   boxShadow: theme.shadows[3],
-  borderRadius: theme.shape.borderRadius
+  borderRadius: theme.shape.borderRadius,
+  transition: 'width 0.3s ease-in-out'
+}));
+
+const MinimizeButton = styled(IconButton)(({ theme }) => ({
+  position: 'absolute',
+  top: theme.spacing(1),
+  right: theme.spacing(1),
+  zIndex: 1100,
+  padding: theme.spacing(0.5)
+}));
+
+const CollapsedPanel = styled(Paper)(({ theme }) => ({
+  position: 'absolute',
+  top: theme.spacing(2),
+  right: theme.spacing(2),
+  padding: theme.spacing(1),
+  zIndex: 1000,
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[3],
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center'
 }));
 
 const SpeciesFilter: React.FC<SpeciesFilterProps> = ({ features, onFilterChange }) => {
   const [uniqueSpecies, setUniqueSpecies] = useState<string[]>([]);
   const [selectedSpecies, setSelectedSpecies] = useState<Set<string>>(new Set());
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   useEffect(() => {
     const speciesSet = new Set<string>();
@@ -81,55 +108,94 @@ const SpeciesFilter: React.FC<SpeciesFilterProps> = ({ features, onFilterChange 
     onFilterChange(new Set());
   };
 
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
+
   return (
-    <StyledFilterPanel className="filter-panel">
-      <Typography variant="subtitle1" color="primary" fontWeight="medium" gutterBottom className="filter-header">
-        Filtrera efter arter
-      </Typography>
-      
-      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-        <Button 
-          size="small" 
-          variant="outlined" 
-          onClick={handleSelectAll}
-          color="primary"
-        >
-          Välj alla
-        </Button>
-        <Button 
-          size="small" 
-          variant="outlined" 
-          onClick={handleClearAll}
-          color="secondary"
-        >
-          Rensa alla
-        </Button>
-      </Stack>
-      
-      <Divider sx={{ mb: 2 }} />
-      
-      <Box sx={{ maxHeight: '60vh', overflow: 'auto' }}>
-        <FormGroup>
-          {uniqueSpecies.map(species => (
-            <FormControlLabel
-              key={species}
-              control={
-                <Checkbox
-                  checked={selectedSpecies.has(species)}
-                  onChange={(e) => handleCheckboxChange(species, e.target.checked)}
-                  size="small"
-                  color="primary"
+    <>
+      {isExpanded ? (
+        <StyledFilterPanel className="filter-panel">
+          <Typography variant="subtitle1" color="primary" fontWeight="medium" gutterBottom className="filter-header">
+            Filtrera efter arter
+          </Typography>
+          
+          <Tooltip title="Minimera panel">
+            <MinimizeButton 
+              onClick={toggleExpanded} 
+              size="small" 
+              color="primary"
+              aria-label="minimize panel"
+            >
+              <KeyboardArrowRightIcon fontSize="small" />
+            </MinimizeButton>
+          </Tooltip>
+          
+          <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+            <Button 
+              size="small" 
+              variant="outlined" 
+              onClick={handleSelectAll}
+              color="primary"
+            >
+              Välj alla
+            </Button>
+            <Button 
+              size="small" 
+              variant="outlined" 
+              onClick={handleClearAll}
+              color="secondary"
+            >
+              Rensa alla
+            </Button>
+          </Stack>
+          
+          <Divider sx={{ mb: 2 }} />
+          
+          <Box sx={{ maxHeight: '60vh', overflow: 'auto' }}>
+            <FormGroup>
+              {uniqueSpecies.map(species => (
+                <FormControlLabel
+                  key={species}
+                  control={
+                    <Checkbox
+                      checked={selectedSpecies.has(species)}
+                      onChange={(e) => handleCheckboxChange(species, e.target.checked)}
+                      size="small"
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <Typography variant="body2">{species}</Typography>
+                  }
+                  sx={{ mb: 0.5 }}
                 />
-              }
-              label={
-                <Typography variant="body2">{species}</Typography>
-              }
-              sx={{ mb: 0.5 }}
-            />
-          ))}
-        </FormGroup>
-      </Box>
-    </StyledFilterPanel>
+              ))}
+            </FormGroup>
+          </Box>
+        </StyledFilterPanel>
+      ) : (
+        <CollapsedPanel>
+          <Tooltip title="Expandera panel">
+            <IconButton 
+              onClick={toggleExpanded} 
+              size="small" 
+              color="primary"
+              aria-label="expand panel"
+            >
+              <KeyboardArrowLeftIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          {selectedSpecies.size > 0 && (
+            <Box ml={1}>
+              <Typography variant="caption" color="primary">
+                {selectedSpecies.size} filter aktiva
+              </Typography>
+            </Box>
+          )}
+        </CollapsedPanel>
+      )}
+    </>
   );
 };
 

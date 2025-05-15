@@ -175,4 +175,46 @@ describe('SpeciesFilter', () => {
     const checkboxes = screen.queryAllByRole('checkbox');
     expect(checkboxes).toHaveLength(0);
   });
+
+  it('toggles between expanded and collapsed states when minimize/maximize button is clicked', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // Initially expanded
+    expect(screen.getByText('Filtrera efter arter')).toBeInTheDocument();
+    
+    // Click minimize button
+    const minimizeButton = screen.getByLabelText('minimize panel');
+    fireEvent.click(minimizeButton);
+    
+    // Should be collapsed now
+    expect(screen.queryByText('Filtrera efter arter')).not.toBeInTheDocument();
+    
+    // Click expand button
+    const expandButton = screen.getByLabelText('expand panel');
+    fireEvent.click(expandButton);
+    
+    // Should be expanded again
+    expect(screen.getByText('Filtrera efter arter')).toBeInTheDocument();
+  });
+
+  it('shows the number of active filters when collapsed', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre', 'Gös'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // Select some filters
+    const gaddaCheckbox = screen.getByLabelText('Gädda') as HTMLInputElement;
+    const abborCheckbox = screen.getByLabelText('Abborre') as HTMLInputElement;
+    fireEvent.click(gaddaCheckbox);
+    fireEvent.click(abborCheckbox);
+    
+    // Click minimize button
+    const minimizeButton = screen.getByLabelText('minimize panel');
+    fireEvent.click(minimizeButton);
+    
+    // Should show the number of active filters
+    expect(screen.getByText('2 filter aktiva')).toBeInTheDocument();
+  });
 });
