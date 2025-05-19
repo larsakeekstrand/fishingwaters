@@ -9,6 +9,7 @@ import {
 import Map from './components/Map';
 import SpeciesFilter from './components/SpeciesFilter';
 import SidePanel from './components/SidePanel';
+import SearchBox from './components/SearchBox';
 import { GeoJsonCollection, GeoJsonFeature } from './types/GeoJsonTypes';
 import { mergeGeoJsonCollections, removeBOM, convertLakeDataToGeoJson } from './utils/DataLoader';
 
@@ -172,7 +173,9 @@ function App() {
           data={data}
           filteredSpecies={filteredSpecies}
           onLakeSelect={setSelectedLake}
+          selectedLake={selectedLake}
         />
+        <SearchBox features={data.features} onLakeSelect={setSelectedLake} />
         <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
       </div>
     </ThemeProvider>

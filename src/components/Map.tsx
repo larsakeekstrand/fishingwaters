@@ -1,15 +1,37 @@
-import React from 'react';
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
 
 interface MapProps {
   data: GeoJsonCollection;
   filteredSpecies: Set<string>;
   onLakeSelect: (lake: GeoJsonFeature) => void;
+  selectedLake: GeoJsonFeature | null;
 }
 
-const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
+// Component to handle map view updates
+interface MapViewProps {
+  selectedLake: GeoJsonFeature | null;
+}
+
+const MapView: React.FC<MapViewProps> = ({ selectedLake }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (selectedLake) {
+      const { coordinates } = selectedLake.geometry;
+      // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]
+      const position: [number, number] = [coordinates[1], coordinates[0]];
+      map.setView(position, 10, { animate: true });
+    }
+  }, [selectedLake, map]);
+  
+  return null;
+};
+
+const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect, selectedLake }) => {
   const swedenCenter: [number, number] = [62.0, 15.0];
+  // Don't use ref for functional components
   
   // Filter features based on selected species
   const getFilteredFeatures = (): GeoJsonFeature[] => {
@@ -54,6 +76,7 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
 
   return (
     <MapContainer center={swedenCenter} zoom={5} style={{ height: '100vh', width: '100%' }}>
+      <MapView selectedLake={selectedLake} />
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap bidragsgivare"
