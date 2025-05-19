@@ -203,7 +203,7 @@ describe('Map', () => {
     expect(tooltip).toHaveTextContent('Näst vanligaste art: Abborre (30%)');
   });
 
-  it('renders all markers in blue color', () => {
+  it('renders markers in blue color when no filter is applied', () => {
     const features = [
       createMockFeature('Lake 1', [18.0579, 59.3293], ['Gädda', 'Abborre']),
       createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös', 'Abborre'])
@@ -217,6 +217,22 @@ describe('Map', () => {
 
     // Since we're using mocked components, we can't directly test the color
     // but this test ensures the code path is covered
+  });
+  
+  it('renders markers in red color when filter is applied', () => {
+    const features = [
+      createMockFeature('Lake 1', [18.0579, 59.3293], ['Gädda', 'Abborre']),
+      createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös', 'Abborre'])
+    ];
+    const data = createMockData(features);
+
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+
+    const markers = screen.getAllByTestId('circle-marker');
+    expect(markers).toHaveLength(1);
+    
+    // Since we're using mocked components, we can't directly test the color
+    // but this test ensures the code path for red markers is covered
   });
 
   it('handles missing or null values in tooltip', () => {
