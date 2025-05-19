@@ -3,6 +3,13 @@ import { render, screen } from '@testing-library/react';
 import SidePanel from '../SidePanel';
 import { GeoJsonFeature } from '../../types/GeoJsonTypes';
 
+// Mock the WeatherPanel component
+jest.mock('../WeatherPanel', () => {
+  return function MockWeatherPanel({ selectedLake }: { selectedLake: GeoJsonFeature }) {
+    return <div data-testid="weather-panel">Weather Panel Mock</div>;
+  };
+});
+
 describe('SidePanel', () => {
   const mockLake: GeoJsonFeature = {
     type: 'Feature',
@@ -40,5 +47,15 @@ describe('SidePanel', () => {
     expect(screen.getByText('Pike (60%)')).toBeInTheDocument();
     expect(screen.getByText('Perch (40%)')).toBeInTheDocument();
     expect(screen.getByText('2023')).toBeInTheDocument();
+  });
+
+  it('includes the WeatherPanel when a lake is selected', () => {
+    render(<SidePanel selectedLake={mockLake} />);
+    expect(screen.getByTestId('weather-panel')).toBeInTheDocument();
+  });
+
+  it('does not include the WeatherPanel when no lake is selected', () => {
+    render(<SidePanel selectedLake={null} />);
+    expect(screen.queryByTestId('weather-panel')).not.toBeInTheDocument();
   });
 });
