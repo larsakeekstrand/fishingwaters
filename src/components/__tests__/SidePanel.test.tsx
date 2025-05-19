@@ -3,6 +3,13 @@ import { render, screen } from '@testing-library/react';
 import SidePanel from '../SidePanel';
 import { GeoJsonFeature } from '../../types/GeoJsonTypes';
 
+// Mock the DirectionsPanel component to simplify testing
+jest.mock('../DirectionsPanel', () => {
+  return function MockDirectionsPanel({ selectedLake }: { selectedLake: GeoJsonFeature }) {
+    return <div data-testid="directions-panel">Directions Panel Mock</div>;
+  };
+});
+
 describe('SidePanel', () => {
   const mockLake: GeoJsonFeature = {
     type: 'Feature',
@@ -40,5 +47,15 @@ describe('SidePanel', () => {
     expect(screen.getByText('Pike (60%)')).toBeInTheDocument();
     expect(screen.getByText('Perch (40%)')).toBeInTheDocument();
     expect(screen.getByText('2023')).toBeInTheDocument();
+  });
+
+  it('includes the DirectionsPanel when a lake is selected', () => {
+    render(<SidePanel selectedLake={mockLake} />);
+    expect(screen.getByTestId('directions-panel')).toBeInTheDocument();
+  });
+
+  it('does not include the DirectionsPanel when no lake is selected', () => {
+    render(<SidePanel selectedLake={null} />);
+    expect(screen.queryByTestId('directions-panel')).not.toBeInTheDocument();
   });
 });
