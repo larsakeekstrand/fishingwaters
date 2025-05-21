@@ -1,7 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
-import { Map as LeafletMap } from 'leaflet';
 
 interface MapProps {
   data: GeoJsonCollection;
