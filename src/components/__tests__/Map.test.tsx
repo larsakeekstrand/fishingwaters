@@ -16,9 +16,18 @@ jest.mock('react-leaflet', () => ({
   Tooltip: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="tooltip">{children}</div>
   ),
+  useMap: () => ({
+    setView: jest.fn()
+  }),
 }));
 
 describe('Map', () => {
+  const mockOnLakeSelect = jest.fn();
+  
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  
   const createMockFeature = (
     name: string,
     coordinates: [number, number],
@@ -52,7 +61,14 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(
+      <Map 
+        data={data} 
+        filteredSpecies={new Set()} 
+        onLakeSelect={mockOnLakeSelect}
+        selectedLake={null}
+      />
+    );
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(2);
@@ -69,7 +85,14 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(
+      <Map 
+        data={data} 
+        filteredSpecies={new Set(['Gädda'])} 
+        onLakeSelect={mockOnLakeSelect}
+        selectedLake={null}
+      />
+    );
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -85,7 +108,14 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(
+      <Map 
+        data={data} 
+        filteredSpecies={new Set(['Gädda'])} 
+        onLakeSelect={mockOnLakeSelect}
+        selectedLake={null}
+      />
+    );
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -131,7 +161,14 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(
+      <Map 
+        data={data} 
+        filteredSpecies={new Set(['Gädda'])} 
+        onLakeSelect={mockOnLakeSelect}
+        selectedLake={null}
+      />
+    );
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -161,7 +198,14 @@ describe('Map', () => {
     };
     const data = createMockData([feature]);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(
+      <Map 
+        data={data} 
+        filteredSpecies={new Set()} 
+        onLakeSelect={mockOnLakeSelect}
+        selectedLake={null}
+      />
+    );
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Test Lake');
@@ -196,7 +240,14 @@ describe('Map', () => {
     };
     const data = createMockData([feature]);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(
+      <Map 
+        data={data} 
+        filteredSpecies={new Set()} 
+        onLakeSelect={mockOnLakeSelect}
+        selectedLake={null}
+      />
+    );
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Vanligaste art: Gädda (45%)');
@@ -210,7 +261,14 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(
+      <Map 
+        data={data} 
+        filteredSpecies={new Set()} 
+        onLakeSelect={mockOnLakeSelect}
+        selectedLake={null}
+      />
+    );
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(2);
@@ -237,11 +295,55 @@ describe('Map', () => {
     };
     const data = createMockData([feature]);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(
+      <Map 
+        data={data} 
+        filteredSpecies={new Set()} 
+        onLakeSelect={mockOnLakeSelect}
+        selectedLake={null}
+      />
+    );
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Maxdjup: Okänt');
     expect(tooltip).toHaveTextContent('Area: 0 ha');
     expect(tooltip).toHaveTextContent('Fångade arter: Inga rapporterade');
+  });
+
+  it('centers map on selected lake', () => {
+    const feature: GeoJsonFeature = {
+      type: 'Feature' as const,
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [18.0579, 59.3293]
+      },
+      properties: {
+        name: 'Test Lake',
+        county: 'Test County',
+        location: 'Test Location',
+        maxDepth: 10,
+        area: 100,
+        elevation: 50
+      }
+    };
+    const data = createMockData([feature]);
+    
+    // Get the mocked setView function from the useMap hook
+    const setViewMock = jest.fn();
+    jest.spyOn(require('react-leaflet'), 'useMap').mockReturnValue({
+      setView: setViewMock
+    });
+
+    render(
+      <Map 
+        data={data} 
+        filteredSpecies={new Set()} 
+        onLakeSelect={mockOnLakeSelect}
+        selectedLake={feature}
+      />
+    );
+
+    // MapCentering component should have called setView
+    expect(setViewMock).toHaveBeenCalled();
   });
 });
