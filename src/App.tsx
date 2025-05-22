@@ -9,6 +9,7 @@ import {
 import Map from './components/Map';
 import SpeciesFilter from './components/SpeciesFilter';
 import SidePanel from './components/SidePanel';
+import LakeSearch from './components/LakeSearch';
 import { GeoJsonCollection, GeoJsonFeature } from './types/GeoJsonTypes';
 import { mergeGeoJsonCollections, removeBOM, convertLakeDataToGeoJson } from './utils/DataLoader';
 
@@ -37,6 +38,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [filteredSpecies, setFilteredSpecies] = useState<Set<string>>(new Set());
   const [selectedLake, setSelectedLake] = useState<GeoJsonFeature | null>(null);
+  const [focusLake, setFocusLake] = useState<GeoJsonFeature | null>(null);
 
   useEffect(() => {
     fetchAllLakeData();
@@ -125,6 +127,11 @@ function App() {
     setFilteredSpecies(selectedSpecies);
   };
 
+  const handleSearchLakeSelect = (lake: GeoJsonFeature) => {
+    setFocusLake(lake);
+    setSelectedLake(lake);
+  };
+
   if (isLoading) {
     return (
       <ThemeProvider theme={theme}>
@@ -172,7 +179,9 @@ function App() {
           data={data}
           filteredSpecies={filteredSpecies}
           onLakeSelect={setSelectedLake}
+          focusLake={focusLake}
         />
+        <LakeSearch features={data.features} onLakeSelect={handleSearchLakeSelect} />
         <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
       </div>
     </ThemeProvider>

@@ -1,14 +1,30 @@
-import React from 'react';
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
 
 interface MapProps {
   data: GeoJsonCollection;
   filteredSpecies: Set<string>;
   onLakeSelect: (lake: GeoJsonFeature) => void;
+  focusLake?: GeoJsonFeature | null;
 }
 
-const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
+// Component to handle map focusing using useMap hook
+const MapController: React.FC<{ focusLake?: GeoJsonFeature | null }> = ({ focusLake }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (focusLake && map) {
+      const { coordinates } = focusLake.geometry;
+      const position: [number, number] = [coordinates[1], coordinates[0]];
+      map.setView(position, 12, { animate: true });
+    }
+  }, [focusLake, map]);
+
+  return null;
+};
+
+const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect, focusLake }) => {
   const swedenCenter: [number, number] = [62.0, 15.0];
   
   // Filter features based on selected species
@@ -53,7 +69,12 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
   };
 
   return (
-    <MapContainer center={swedenCenter} zoom={5} style={{ height: '100vh', width: '100%' }}>
+    <MapContainer 
+      center={swedenCenter} 
+      zoom={5} 
+      style={{ height: '100vh', width: '100%' }}
+    >
+      <MapController focusLake={focusLake} />
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap bidragsgivare"
