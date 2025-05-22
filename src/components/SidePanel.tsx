@@ -10,9 +10,13 @@ import {
   Box
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import LakeSearch from './LakeSearch';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
+  features: GeoJsonFeature[];
+  onLakeSelect: (lake: GeoJsonFeature) => void;
+  onMapRefocus: (coordinates: [number, number]) => void;
 }
 
 const StyledSidePanel = styled(Paper)(({ theme }) => ({
@@ -25,19 +29,7 @@ const StyledSidePanel = styled(Paper)(({ theme }) => ({
   position: 'relative'
 }));
 
-const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
-  if (!selectedLake) {
-    return (
-      <StyledSidePanel>
-        <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-          <Typography variant="body1" color="text.secondary">
-            Välj en sjö på kartan för att se mer information
-          </Typography>
-        </Box>
-      </StyledSidePanel>
-    );
-  }
-
+const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, features, onLakeSelect, onMapRefocus }) => {
   const renderCaughtSpecies = (species: string[] | string | undefined): string => {
     if (!species) return 'Inga rapporterade';
     if (Array.isArray(species)) return species.join(', ');
@@ -46,11 +38,25 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
 
   return (
     <StyledSidePanel>
-      <Typography variant="h5" component="h2" gutterBottom color="primary">
-        {selectedLake.properties.name}
-      </Typography>
-      <Divider sx={{ mb: 2 }} />
-      <List disablePadding>
+      <LakeSearch 
+        features={features}
+        onLakeSelect={onLakeSelect}
+        onMapRefocus={onMapRefocus}
+      />
+      
+      {!selectedLake ? (
+        <Box display="flex" justifyContent="center" alignItems="center" height="60%">
+          <Typography variant="body1" color="text.secondary" textAlign="center">
+            Sök efter en sjö ovan eller välj en sjö på kartan för att se mer information
+          </Typography>
+        </Box>
+      ) : (
+        <>
+          <Typography variant="h5" component="h2" gutterBottom color="primary">
+            {selectedLake.properties.name}
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <List disablePadding>
         <ListItem sx={{ py: 1 }}>
           <ListItemText 
             primary="Maxdjup" 
@@ -98,8 +104,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake }) => {
             primary="Senaste fiskeår" 
             secondary={selectedLake.properties.senasteFiskeår || 'Okänt'} 
           />
-        </ListItem>
-      </List>
+          </ListItem>
+        </List>
+        </>
+      )}
     </StyledSidePanel>
   );
 };

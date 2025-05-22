@@ -51,8 +51,9 @@ describe('Map', () => {
       createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös', 'Abborre'])
     ];
     const data = createMockData(features);
+    const mockOnLakeSelect = jest.fn();
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} onLakeSelect={mockOnLakeSelect} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(2);
@@ -68,8 +69,9 @@ describe('Map', () => {
       createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös', 'Abborre'])
     ];
     const data = createMockData(features);
+    const mockOnLakeSelect = jest.fn();
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} onLakeSelect={mockOnLakeSelect} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -84,8 +86,9 @@ describe('Map', () => {
       createMockFeature('Lake 2', [17.0579, 58.3293], 'Gös, Abborre')
     ];
     const data = createMockData(features);
+    const mockOnLakeSelect = jest.fn();
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} onLakeSelect={mockOnLakeSelect} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -130,8 +133,9 @@ describe('Map', () => {
       }
     ];
     const data = createMockData(features);
+    const mockOnLakeSelect = jest.fn();
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} onLakeSelect={mockOnLakeSelect} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -160,8 +164,9 @@ describe('Map', () => {
       }
     };
     const data = createMockData([feature]);
+    const mockOnLakeSelect = jest.fn();
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} onLakeSelect={mockOnLakeSelect} />);
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Test Lake');
@@ -195,8 +200,9 @@ describe('Map', () => {
       }
     };
     const data = createMockData([feature]);
+    const mockOnLakeSelect = jest.fn();
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} onLakeSelect={mockOnLakeSelect} />);
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Vanligaste art: Gädda (45%)');
@@ -209,8 +215,9 @@ describe('Map', () => {
       createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös', 'Abborre'])
     ];
     const data = createMockData(features);
+    const mockOnLakeSelect = jest.fn();
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} onLakeSelect={mockOnLakeSelect} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(2);
@@ -236,8 +243,9 @@ describe('Map', () => {
       }
     };
     const data = createMockData([feature]);
+    const mockOnLakeSelect = jest.fn();
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} onLakeSelect={mockOnLakeSelect} />);
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Maxdjup: Okänt');

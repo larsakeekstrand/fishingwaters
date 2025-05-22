@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
+import { Map as LeafletMap } from 'leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
 
 interface MapProps {
@@ -8,8 +9,21 @@ interface MapProps {
   onLakeSelect: (lake: GeoJsonFeature) => void;
 }
 
-const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
+export interface MapRef {
+  flyTo: (coordinates: [number, number], zoom?: number) => void;
+}
+
+const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, onLakeSelect }, ref) => {
   const swedenCenter: [number, number] = [62.0, 15.0];
+  const mapRef = useRef<LeafletMap | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    flyTo: (coordinates: [number, number], zoom: number = 12) => {
+      if (mapRef.current) {
+        mapRef.current.flyTo(coordinates, zoom);
+      }
+    }
+  }));
   
   // Filter features based on selected species
   const getFilteredFeatures = (): GeoJsonFeature[] => {
@@ -53,7 +67,12 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
   };
 
   return (
-    <MapContainer center={swedenCenter} zoom={5} style={{ height: '100vh', width: '100%' }}>
+    <MapContainer 
+      center={swedenCenter} 
+      zoom={5} 
+      style={{ height: '100vh', width: '100%' }}
+      ref={mapRef}
+    >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap bidragsgivare"
@@ -101,6 +120,8 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
       })}
     </MapContainer>
   );
-};
+});
+
+Map.displayName = 'Map';
 
 export default Map;

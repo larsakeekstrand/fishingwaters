@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   ThemeProvider, 
   createTheme, 
@@ -6,7 +6,7 @@ import {
   Box,
   Typography
 } from '@mui/material';
-import Map from './components/Map';
+import Map, { MapRef } from './components/Map';
 import SpeciesFilter from './components/SpeciesFilter';
 import SidePanel from './components/SidePanel';
 import { GeoJsonCollection, GeoJsonFeature } from './types/GeoJsonTypes';
@@ -37,6 +37,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [filteredSpecies, setFilteredSpecies] = useState<Set<string>>(new Set());
   const [selectedLake, setSelectedLake] = useState<GeoJsonFeature | null>(null);
+  const mapRef = useRef<MapRef>(null);
 
   useEffect(() => {
     fetchAllLakeData();
@@ -125,6 +126,12 @@ function App() {
     setFilteredSpecies(selectedSpecies);
   };
 
+  const handleMapRefocus = (coordinates: [number, number]) => {
+    if (mapRef.current) {
+      mapRef.current.flyTo(coordinates);
+    }
+  };
+
   if (isLoading) {
     return (
       <ThemeProvider theme={theme}>
@@ -167,8 +174,14 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <div className="app">
-        <SidePanel selectedLake={selectedLake} />
+        <SidePanel 
+          selectedLake={selectedLake}
+          features={data.features}
+          onLakeSelect={setSelectedLake}
+          onMapRefocus={handleMapRefocus}
+        />
         <Map
+          ref={mapRef}
           data={data}
           filteredSpecies={filteredSpecies}
           onLakeSelect={setSelectedLake}
