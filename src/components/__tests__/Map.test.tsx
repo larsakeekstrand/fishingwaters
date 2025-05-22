@@ -10,8 +10,8 @@ jest.mock('react-leaflet', () => ({
     <div data-testid="map-container">{children}</div>
   ),
   TileLayer: () => <div data-testid="tile-layer" />,
-  CircleMarker: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="circle-marker">{children}</div>
+  CircleMarker: ({ children, pathOptions }: { children: React.ReactNode; pathOptions?: any }) => (
+    <div data-testid="circle-marker" data-fill-color={pathOptions?.fillColor}>{children}</div>
   ),
   Tooltip: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="tooltip">{children}</div>
@@ -52,7 +52,7 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} onLakeSelect={() => {}} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(2);
@@ -69,7 +69,7 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} onLakeSelect={() => {}} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -85,7 +85,7 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} onLakeSelect={() => {}} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -131,7 +131,7 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} onLakeSelect={() => {}} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -161,7 +161,7 @@ describe('Map', () => {
     };
     const data = createMockData([feature]);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} onLakeSelect={() => {}} />);
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Test Lake');
@@ -196,27 +196,45 @@ describe('Map', () => {
     };
     const data = createMockData([feature]);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} onLakeSelect={() => {}} />);
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Vanligaste art: Gädda (45%)');
     expect(tooltip).toHaveTextContent('Näst vanligaste art: Abborre (30%)');
   });
 
-  it('renders all markers in blue color', () => {
+  it('renders all markers in blue color when no filter is applied', () => {
     const features = [
       createMockFeature('Lake 1', [18.0579, 59.3293], ['Gädda', 'Abborre']),
       createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös', 'Abborre'])
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} onLakeSelect={() => {}} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(2);
+    
+    markers.forEach(marker => {
+      expect(marker).toHaveAttribute('data-fill-color', '#3388ff');
+    });
+  });
 
-    // Since we're using mocked components, we can't directly test the color
-    // but this test ensures the code path is covered
+  it('renders filtered markers in red color when filter is applied', () => {
+    const features = [
+      createMockFeature('Lake 1', [18.0579, 59.3293], ['Gädda', 'Abborre']),
+      createMockFeature('Lake 2', [17.0579, 58.3293], ['Gös', 'Abborre'])
+    ];
+    const data = createMockData(features);
+
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} onLakeSelect={() => {}} />);
+
+    const markers = screen.getAllByTestId('circle-marker');
+    expect(markers).toHaveLength(1);
+    
+    markers.forEach(marker => {
+      expect(marker).toHaveAttribute('data-fill-color', '#ff4444');
+    });
   });
 
   it('handles missing or null values in tooltip', () => {
@@ -237,7 +255,7 @@ describe('Map', () => {
     };
     const data = createMockData([feature]);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} onLakeSelect={() => {}} />);
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Maxdjup: Okänt');
