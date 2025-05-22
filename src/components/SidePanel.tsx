@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import LakeSearch from './LakeSearch';
+import WeatherForecast from './WeatherForecast';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
@@ -106,6 +107,13 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, features, onLakeSel
           />
           </ListItem>
         </List>
+        
+        <Divider sx={{ my: 2 }} />
+        
+        <WeatherForecast 
+          latitude={selectedLake.geometry.coordinates[1]} 
+          longitude={selectedLake.geometry.coordinates[0]}
+        />
         </>
       )}
     </StyledSidePanel>
