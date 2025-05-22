@@ -1,14 +1,30 @@
-import React from 'react';
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
+import React, { useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
 
 interface MapProps {
   data: GeoJsonCollection;
   filteredSpecies: Set<string>;
   onLakeSelect: (lake: GeoJsonFeature) => void;
+  focusLake?: GeoJsonFeature | null;
 }
 
-const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
+// Component to handle map focusing
+const MapFocusHandler: React.FC<{ focusLake: GeoJsonFeature | null }> = ({ focusLake }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (focusLake) {
+      const { coordinates } = focusLake.geometry;
+      const position: [number, number] = [coordinates[1], coordinates[0]];
+      map.setView(position, 12); // Zoom level 12 for lake detail
+    }
+  }, [focusLake, map]);
+
+  return null;
+};
+
+const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect, focusLake }) => {
   const swedenCenter: [number, number] = [62.0, 15.0];
   
   // Filter features based on selected species
@@ -59,12 +75,13 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
         attribution="&copy; OpenStreetMap bidragsgivare"
         maxZoom={19}
       />
+      <MapFocusHandler focusLake={focusLake} />
       {getFilteredFeatures().map((feature, index) => {
         const { coordinates } = feature.geometry;
         // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]
         const position: [number, number] = [coordinates[1], coordinates[0]]; 
         
-        const fillColor = '#3388ff';
+        const fillColor = filteredSpecies.size > 0 ? '#ff4444' : '#3388ff';
         
         return (
           <CircleMarker 
