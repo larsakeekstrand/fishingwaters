@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SpeciesFilter from '../SpeciesFilter';
 import { GeoJsonFeature } from '../../types/GeoJsonTypes';
@@ -174,5 +174,58 @@ describe('SpeciesFilter', () => {
     
     const checkboxes = screen.queryAllByRole('checkbox');
     expect(checkboxes).toHaveLength(0);
+  });
+
+  it('shows minimize/maximize button', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    const minimizeButton = screen.getByLabelText('Dölj filter');
+    expect(minimizeButton).toBeInTheDocument();
+  });
+
+  it('toggles panel visibility when minimize button is clicked', async () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // Initially the content should be visible
+    expect(screen.getByText('Välj alla')).toBeInTheDocument();
+    expect(screen.getByText('Rensa alla')).toBeInTheDocument();
+    
+    // Click minimize button
+    const minimizeButton = screen.getByLabelText('Dölj filter');
+    fireEvent.click(minimizeButton);
+    
+    // Wait for the collapse animation and content to be hidden
+    await waitFor(() => {
+      expect(screen.queryByText('Välj alla')).not.toBeInTheDocument();
+    });
+    expect(screen.queryByText('Rensa alla')).not.toBeInTheDocument();
+    
+    // Button label should change
+    const maximizeButton = screen.getByLabelText('Visa filter');
+    expect(maximizeButton).toBeInTheDocument();
+  });
+
+  it('shows content again when maximize button is clicked', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // Minimize first
+    const minimizeButton = screen.getByLabelText('Dölj filter');
+    fireEvent.click(minimizeButton);
+    
+    // Then maximize
+    const maximizeButton = screen.getByLabelText('Visa filter');
+    fireEvent.click(maximizeButton);
+    
+    // Content should be visible again
+    expect(screen.getByText('Välj alla')).toBeInTheDocument();
+    expect(screen.getByText('Rensa alla')).toBeInTheDocument();
+    expect(screen.getByText('Gädda')).toBeInTheDocument();
+    expect(screen.getByText('Abborre')).toBeInTheDocument();
   });
 });
