@@ -64,7 +64,7 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
         // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]
         const position: [number, number] = [coordinates[1], coordinates[0]]; 
         
-        const fillColor = '#3388ff';
+        const fillColor = filteredSpecies.size > 0 ? '#ff3333' : '#3388ff';
         
         return (
           <CircleMarker 
