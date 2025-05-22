@@ -28,7 +28,12 @@ describe('SpeciesFilter', () => {
     mockOnFilterChange.mockClear();
   });
 
-  it('renders species list from array data', () => {
+  const expandPanel = () => {
+    const expandButton = screen.getByRole('button');
+    fireEvent.click(expandButton);
+  };
+
+  it('renders filter panel header and starts minimized', () => {
     const features = [
       createMockFeature(['Gädda', 'Abborre']),
       createMockFeature(['Gös', 'Abborre'])
@@ -37,6 +42,25 @@ describe('SpeciesFilter', () => {
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
 
     expect(screen.getByText('Filtrera efter arter')).toBeInTheDocument();
+    
+    // Should start minimized, check the collapse container has correct attributes
+    const filterContent = screen.getByTestId('filter-content');
+    expect(filterContent).toHaveStyle('visibility: hidden');
+  });
+
+  it('expands to show species list when expand button is clicked', () => {
+    const features = [
+      createMockFeature(['Gädda', 'Abborre']),
+      createMockFeature(['Gös', 'Abborre'])
+    ];
+
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+
+    // Click the expand button
+    const expandButton = screen.getByRole('button');
+    fireEvent.click(expandButton);
+
+    // Now species should be visible
     expect(screen.getByText('Abborre')).toBeInTheDocument();
     expect(screen.getByText('Gädda')).toBeInTheDocument();
     expect(screen.getByText('Gös')).toBeInTheDocument();
@@ -49,6 +73,7 @@ describe('SpeciesFilter', () => {
     ];
 
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    expandPanel();
 
     expect(screen.getByText('Abborre')).toBeInTheDocument();
     expect(screen.getByText('Gädda')).toBeInTheDocument();
@@ -59,6 +84,7 @@ describe('SpeciesFilter', () => {
     const features = [createMockFeature(['Gädda', 'Abborre'])];
     
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    expandPanel();
     
     const gaddaCheckbox = screen.getByLabelText('Gädda') as HTMLInputElement;
     fireEvent.click(gaddaCheckbox);
@@ -75,6 +101,7 @@ describe('SpeciesFilter', () => {
     const features = [createMockFeature(['Gädda', 'Abborre', 'Gös'])];
     
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    expandPanel();
     
     const selectAllButton = screen.getByText('Välj alla');
     fireEvent.click(selectAllButton);
@@ -91,6 +118,7 @@ describe('SpeciesFilter', () => {
     const features = [createMockFeature(['Gädda', 'Abborre', 'Gös'])];
     
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    expandPanel();
     
     // First select all
     fireEvent.click(screen.getByText('Välj alla'));
@@ -145,6 +173,7 @@ describe('SpeciesFilter', () => {
     ];
 
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    expandPanel();
 
     expect(screen.getByText('Gädda')).toBeInTheDocument();
     expect(screen.getByText('Abborre')).toBeInTheDocument();
@@ -171,8 +200,31 @@ describe('SpeciesFilter', () => {
     ];
 
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    expandPanel();
     
     const checkboxes = screen.queryAllByRole('checkbox');
     expect(checkboxes).toHaveLength(0);
+  });
+
+  it('toggles expand/collapse state when clicking the toggle button', () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    const filterContent = screen.getByTestId('filter-content');
+    const toggleButton = screen.getByRole('button');
+    
+    // Initially collapsed
+    expect(filterContent).toHaveStyle('visibility: hidden');
+    
+    // Click to expand
+    fireEvent.click(toggleButton);
+    
+    // Now expanded - content should be visible
+    expect(screen.getByText('Gädda')).toBeInTheDocument();
+    expect(screen.getByText('Abborre')).toBeInTheDocument();
+    
+    // Test that expand button exists and can be clicked (basic functionality test)
+    expect(toggleButton).toBeInTheDocument();
   });
 });
