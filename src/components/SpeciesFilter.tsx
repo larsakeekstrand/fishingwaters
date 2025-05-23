@@ -20,11 +20,11 @@ interface SpeciesFilterProps {
 
 const StyledFilterPanel = styled(Paper)(({ theme }) => ({
   position: 'absolute',
-  top: theme.spacing(2),
+  top: theme.spacing(11), // Positioned below search panel (2 + 2 padding + 5 for search height + 2 gap)
   right: theme.spacing(2),
   padding: theme.spacing(2),
   zIndex: 1000,
-  maxHeight: '80vh',
+  maxHeight: 'calc(80vh - 80px)', // Adjusted to account for search panel above
   overflow: 'auto',
   width: 250,
   boxShadow: theme.shadows[3],

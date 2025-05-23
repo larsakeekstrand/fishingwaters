@@ -5,17 +5,25 @@ import Map from '../Map';
 import { GeoJsonCollection, GeoJsonFeature } from '../../types/GeoJsonTypes';
 
 // Mock react-leaflet components
-jest.mock('react-leaflet', () => ({
-  MapContainer: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="map-container">{children}</div>
-  ),
-  TileLayer: () => <div data-testid="tile-layer" />,
-  CircleMarker: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="circle-marker">{children}</div>
-  ),
-  Tooltip: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="tooltip">{children}</div>
-  ),
+jest.mock('react-leaflet', () => {
+  const React = require('react');
+  return {
+    MapContainer: React.forwardRef(({ children }: { children: React.ReactNode }, ref: any) => (
+      React.createElement('div', { 'data-testid': 'map-container', ref }, children)
+    )),
+    TileLayer: () => React.createElement('div', { 'data-testid': 'tile-layer' }),
+    CircleMarker: ({ children }: { children: React.ReactNode }) => (
+      React.createElement('div', { 'data-testid': 'circle-marker' }, children)
+    ),
+    Tooltip: ({ children }: { children: React.ReactNode }) => (
+      React.createElement('div', { 'data-testid': 'tooltip' }, children)
+    ),
+  };
+});
+
+// Mock leaflet
+jest.mock('leaflet', () => ({
+  Map: jest.fn()
 }));
 
 describe('Map', () => {
