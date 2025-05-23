@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SpeciesFilter from '../SpeciesFilter';
 import { GeoJsonFeature } from '../../types/GeoJsonTypes';
@@ -36,6 +36,10 @@ describe('SpeciesFilter', () => {
 
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
 
+    // Expand the panel first
+    const expandButton = screen.getByRole('button');
+    fireEvent.click(expandButton);
+
     expect(screen.getByText('Filtrera efter arter')).toBeInTheDocument();
     expect(screen.getByText('Abborre')).toBeInTheDocument();
     expect(screen.getByText('Gädda')).toBeInTheDocument();
@@ -50,6 +54,10 @@ describe('SpeciesFilter', () => {
 
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
 
+    // Expand the panel first
+    const expandButton = screen.getByRole('button');
+    fireEvent.click(expandButton);
+
     expect(screen.getByText('Abborre')).toBeInTheDocument();
     expect(screen.getByText('Gädda')).toBeInTheDocument();
     expect(screen.getByText('Gös')).toBeInTheDocument();
@@ -59,6 +67,10 @@ describe('SpeciesFilter', () => {
     const features = [createMockFeature(['Gädda', 'Abborre'])];
     
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // Expand the panel first
+    const expandButton = screen.getByRole('button');
+    fireEvent.click(expandButton);
     
     const gaddaCheckbox = screen.getByLabelText('Gädda') as HTMLInputElement;
     fireEvent.click(gaddaCheckbox);
@@ -76,6 +88,10 @@ describe('SpeciesFilter', () => {
     
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
     
+    // Expand the panel first
+    const expandButton = screen.getByRole('button');
+    fireEvent.click(expandButton);
+    
     const selectAllButton = screen.getByText('Välj alla');
     fireEvent.click(selectAllButton);
 
@@ -91,6 +107,10 @@ describe('SpeciesFilter', () => {
     const features = [createMockFeature(['Gädda', 'Abborre', 'Gös'])];
     
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // Expand the panel first
+    const expandButton = screen.getByRole('button');
+    fireEvent.click(expandButton);
     
     // First select all
     fireEvent.click(screen.getByText('Välj alla'));
@@ -146,6 +166,10 @@ describe('SpeciesFilter', () => {
 
     render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
 
+    // Expand the panel first
+    const expandButton = screen.getByRole('button');
+    fireEvent.click(expandButton);
+
     expect(screen.getByText('Gädda')).toBeInTheDocument();
     expect(screen.getByText('Abborre')).toBeInTheDocument();
   });
@@ -174,5 +198,34 @@ describe('SpeciesFilter', () => {
     
     const checkboxes = screen.queryAllByRole('checkbox');
     expect(checkboxes).toHaveLength(0);
+  });
+
+  it('starts minimized and can be expanded/collapsed', async () => {
+    const features = [createMockFeature(['Gädda', 'Abborre'])];
+    
+    render(<SpeciesFilter features={features} onFilterChange={mockOnFilterChange} />);
+    
+    // Should start minimized - check that checkboxes are not visible
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+    
+    // Click to expand
+    const expandButton = screen.getByRole('button');
+    fireEvent.click(expandButton);
+    
+    // Wait for animation and check elements are visible
+    await waitFor(() => {
+      expect(screen.getByText('Filtrera efter arter')).toBeInTheDocument();
+      expect(screen.getByText('Välj alla')).toBeInTheDocument();
+      expect(screen.getByText('Rensa alla')).toBeInTheDocument();
+      expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
+    });
+    
+    // Click to collapse again
+    fireEvent.click(expandButton);
+    
+    // Wait for animation and check elements are hidden
+    await waitFor(() => {
+      expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+    });
   });
 });
