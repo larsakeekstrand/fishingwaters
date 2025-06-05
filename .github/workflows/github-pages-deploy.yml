@@ -16,11 +16,22 @@ permissions:
 
 jobs:
   deploy:
-    # Only run this job when the workflow was successful and a tag was created
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event_name != 'workflow_dispatch' }} || ${{ github.event_name == 'workflow_dispatch' }}
+    # Only run this job when the workflow was successful on main branch
+    if: |
+      (github.event.workflow_run.conclusion == 'success' && 
+       github.event.workflow_run.head_branch == 'main' && 
+       github.event_name != 'workflow_dispatch') || 
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     
     steps:
+      - name: Debug workflow trigger
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Workflow run conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Workflow run head branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "Workflow run name: ${{ github.event.workflow_run.name }}"
+          
       - name: Checkout repository
         uses: actions/checkout@v4
       
