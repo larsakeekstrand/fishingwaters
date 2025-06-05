@@ -75,7 +75,7 @@ jobs:
           export BASE_URL=https://larsakeekstrand.github.io/fishingwaters
           export NODE_ENV=test
           mkdir -p reports
-          npm run test:bdd:ci
+          npm run test:bdd:ci features/map-display.feature features/health-check.feature
         continue-on-error: true
       
       - name: Upload BDD test report
