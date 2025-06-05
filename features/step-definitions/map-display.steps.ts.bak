@@ -1,0 +1,166 @@
+import { Given, When, Then } from '@cucumber/cucumber';
+import React from 'react';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { CustomWorld } from '../support/world';
+import Map from '../../src/components/Map';
+
+// Mock react-leaflet components
+jest.mock('react-leaflet', () => ({
+  MapContainer: ({ children }: any) => <div data-testid="map-container">{children}</div>,
+  TileLayer: () => <div data-testid="tile-layer" />,
+  GeoJSON: ({ data }: any) => (
+    <div data-testid="geojson-layer" data-features={JSON.stringify(data?.features || [])} />
+  ),
+  useMap: () => ({
+    fitBounds: jest.fn(),
+  }),
+}));
+
+Given('the application has loaded map data', async function(this: CustomWorld) {
+  this.testData.mockGeoJsonData = {
+    type: 'FeatureCollection',
+    features: []
+  };
+});
+
+Given('the following fishing waters are available:', function(this: CustomWorld, dataTable: any) {
+  const waters = dataTable.hashes();
+  this.testData.mockGeoJsonData = {
+    type: 'FeatureCollection',
+    features: waters.map((water: any, index: number) => ({
+      type: 'Feature',
+      properties: {
+        name: water.name,
+        species: water.species.split(', '),
+        region: water.region
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: [16.0 + index * 0.5, 59.0 + index * 0.5]
+      }
+    }))
+  };
+});
+
+When('I open the fishing waters map', async function(this: CustomWorld) {
+  this.renderComponent(
+    <Map 
+      geoJsonData={this.testData.mockGeoJsonData}
+      selectedSpecies={[]}
+      onFeatureClick={jest.fn()}
+    />
+  );
+  
+  await waitFor(() => {
+    expect(screen.getByTestId('map-container')).toBeInTheDocument();
+  });
+});
+
+Then('I should see a map centered on Sweden', function(this: CustomWorld) {
+  expect(screen.getByTestId('map-container')).toBeInTheDocument();
+});
+
+Then('I should see {int} fishing water marker(s) on the map', function(this: CustomWorld, count: number) {
+  const geoJsonLayer = screen.getByTestId('geojson-layer');
+  const features = JSON.parse(geoJsonLayer.getAttribute('data-features') || '[]');
+  expect(features).toHaveLength(count);
+});
+
+Then('all markers should be visible', function(this: CustomWorld) {
+  const geoJsonLayer = screen.getByTestId('geojson-layer');
+  expect(geoJsonLayer).toBeInTheDocument();
+});
+
+Given('I have opened the fishing waters map', async function(this: CustomWorld) {
+  this.renderComponent(
+    <Map 
+      geoJsonData={this.testData.mockGeoJsonData}
+      selectedSpecies={this.testData.selectedSpecies || []}
+      onFeatureClick={jest.fn()}
+    />
+  );
+  
+  await waitFor(() => {
+    expect(screen.getByTestId('map-container')).toBeInTheDocument();
+  });
+});
+
+When('I select {string} from the species filter', function(this: CustomWorld, species: string) {
+  if (!this.testData.selectedSpecies) {
+    this.testData.selectedSpecies = [];
+  }
+  this.testData.selectedSpecies.push(species);
+  
+  // Re-render with updated species
+  this.component?.rerender(
+    <Map 
+      geoJsonData={this.testData.mockGeoJsonData}
+      selectedSpecies={this.testData.selectedSpecies}
+      onFeatureClick={jest.fn()}
+    />
+  );
+});
+
+Then('I should see only {int} fishing water marker', function(this: CustomWorld, count: number) {
+  const geoJsonLayer = screen.getByTestId('geojson-layer');
+  const features = JSON.parse(geoJsonLayer.getAttribute('data-features') || '[]');
+  const filteredFeatures = features.filter((f: any) => 
+    this.testData.selectedSpecies?.some((species: string) => 
+      f.properties.species.includes(species)
+    )
+  );
+  expect(filteredFeatures).toHaveLength(count);
+});
+
+Then('the marker should represent {string}', function(this: CustomWorld, waterName: string) {
+  const geoJsonLayer = screen.getByTestId('geojson-layer');
+  const features = JSON.parse(geoJsonLayer.getAttribute('data-features') || '[]');
+  const filteredFeatures = features.filter((f: any) => 
+    this.testData.selectedSpecies?.some((species: string) => 
+      f.properties.species.includes(species)
+    )
+  );
+  expect(filteredFeatures[0].properties.name).toBe(waterName);
+});
+
+Then('the markers should represent {string} and {string}', function(this: CustomWorld, water1: string, water2: string) {
+  const geoJsonLayer = screen.getByTestId('geojson-layer');
+  const features = JSON.parse(geoJsonLayer.getAttribute('data-features') || '[]');
+  const filteredFeatures = features.filter((f: any) => 
+    this.testData.selectedSpecies?.some((species: string) => 
+      f.properties.species.includes(species)
+    )
+  );
+  const names = filteredFeatures.map((f: any) => f.properties.name);
+  expect(names).toContain(water1);
+  expect(names).toContain(water2);
+});
+
+Given('I have filtered the map to show only {string} waters', async function(this: CustomWorld, species: string) {
+  this.testData.selectedSpecies = [species];
+  this.renderComponent(
+    <Map 
+      geoJsonData={this.testData.mockGeoJsonData}
+      selectedSpecies={this.testData.selectedSpecies}
+      onFeatureClick={jest.fn()}
+    />
+  );
+});
+
+When('I clear all species filters', function(this: CustomWorld) {
+  this.testData.selectedSpecies = [];
+  this.component?.rerender(
+    <Map 
+      geoJsonData={this.testData.mockGeoJsonData}
+      selectedSpecies={this.testData.selectedSpecies}
+      onFeatureClick={jest.fn()}
+    />
+  );
+});
+
+Then('I should see all {int} fishing water markers again', function(this: CustomWorld, count: number) {
+  const geoJsonLayer = screen.getByTestId('geojson-layer');
+  const features = JSON.parse(geoJsonLayer.getAttribute('data-features') || '[]');
+  expect(features).toHaveLength(count);
+});

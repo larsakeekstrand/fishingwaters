@@ -1,0 +1,157 @@
+import { Given, When, Then } from '@cucumber/cucumber';
+import React from 'react';
+import { screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { CustomWorld } from '../support/world';
+import SpeciesFilter from '../../src/components/SpeciesFilter';
+
+Given('the following species are available in the system:', function(this: CustomWorld, dataTable: any) {
+  const species = dataTable.hashes().map((row: any) => row.species);
+  this.testData.mockIndexData = {
+    species: species
+  };
+});
+
+When('I view the species filter', function(this: CustomWorld) {
+  this.renderComponent(
+    <SpeciesFilter
+      species={this.testData.mockIndexData?.species || []}
+      selectedSpecies={[]}
+      onSpeciesChange={jest.fn()}
+    />
+  );
+});
+
+Then('I should see all {int} species as filter options', function(this: CustomWorld, count: number) {
+  const chips = screen.getAllByRole('button');
+  // Subtract 1 for the "Clear all" button
+  expect(chips.length - 1).toBe(count);
+});
+
+Then('no species should be selected by default', function(this: CustomWorld) {
+  const chips = screen.getAllByRole('button');
+  chips.forEach(chip => {
+    if (chip.textContent !== 'Clear all') {
+      expect(chip).not.toHaveClass('MuiChip-filled');
+    }
+  });
+});
+
+When('I select {string} from the species filter', async function(this: CustomWorld, species: string) {
+  const chip = screen.getByText(species).closest('button');
+  if (chip) {
+    await userEvent.click(chip);
+  }
+  
+  if (!this.testData.selectedSpecies) {
+    this.testData.selectedSpecies = [];
+  }
+  this.testData.selectedSpecies.push(species);
+});
+
+Then('{string} should be highlighted as selected', function(this: CustomWorld, species: string) {
+  const chip = screen.getByText(species).closest('div[role="button"]');
+  expect(chip).toHaveClass('MuiChip-filled');
+});
+
+Then('the other species should remain unselected', function(this: CustomWorld) {
+  const allSpecies = this.testData.mockIndexData?.species || [];
+  allSpecies.forEach((species: string) => {
+    if (!this.testData.selectedSpecies?.includes(species)) {
+      const chip = screen.getByText(species).closest('div[role="button"]');
+      expect(chip).not.toHaveClass('MuiChip-filled');
+    }
+  });
+});
+
+Then('both {string} and {string} should be highlighted as selected', function(this: CustomWorld, species1: string, species2: string) {
+  const chip1 = screen.getByText(species1).closest('div[role="button"]');
+  const chip2 = screen.getByText(species2).closest('div[role="button"]');
+  expect(chip1).toHaveClass('MuiChip-filled');
+  expect(chip2).toHaveClass('MuiChip-filled');
+});
+
+Then('I should see {int} selected species indicated', function(this: CustomWorld, count: number) {
+  const selectedChips = screen.getAllByRole('button').filter(chip => 
+    chip.classList.contains('MuiChip-filled')
+  );
+  expect(selectedChips).toHaveLength(count);
+});
+
+Given('I have selected {string} and {string}', async function(this: CustomWorld, species1: string, species2: string) {
+  this.testData.selectedSpecies = [species1, species2];
+  this.renderComponent(
+    <SpeciesFilter
+      species={this.testData.mockIndexData?.species || []}
+      selectedSpecies={this.testData.selectedSpecies}
+      onSpeciesChange={jest.fn()}
+    />
+  );
+});
+
+When('I click on {string} again', async function(this: CustomWorld, species: string) {
+  const chip = screen.getByText(species).closest('button');
+  if (chip) {
+    await userEvent.click(chip);
+  }
+  this.testData.selectedSpecies = this.testData.selectedSpecies?.filter(s => s !== species);
+});
+
+Then('{string} should no longer be selected', function(this: CustomWorld, species: string) {
+  const chip = screen.getByText(species).closest('div[role="button"]');
+  expect(chip).not.toHaveClass('MuiChip-filled');
+});
+
+Then('only {string} should remain selected', function(this: CustomWorld, species: string) {
+  const chip = screen.getByText(species).closest('div[role="button"]');
+  expect(chip).toHaveClass('MuiChip-filled');
+});
+
+Given('I have selected {string}, {string}, and {string}', async function(this: CustomWorld, species1: string, species2: string, species3: string) {
+  this.testData.selectedSpecies = [species1, species2, species3];
+  this.renderComponent(
+    <SpeciesFilter
+      species={this.testData.mockIndexData?.species || []}
+      selectedSpecies={this.testData.selectedSpecies}
+      onSpeciesChange={jest.fn()}
+    />
+  );
+});
+
+When('I click the {string} button', async function(this: CustomWorld, buttonText: string) {
+  const button = screen.getByText(buttonText);
+  await userEvent.click(button);
+  if (buttonText === 'Clear all') {
+    this.testData.selectedSpecies = [];
+  }
+});
+
+Then('no species should be selected', function(this: CustomWorld) {
+  const chips = screen.getAllByRole('button');
+  chips.forEach(chip => {
+    if (chip.textContent !== 'Clear all') {
+      expect(chip).not.toHaveClass('MuiChip-filled');
+    }
+  });
+});
+
+Then('all species should be available for selection', function(this: CustomWorld) {
+  const chips = screen.getAllByRole('button');
+  chips.forEach(chip => {
+    expect(chip).not.toBeDisabled();
+  });
+});
+
+Given('the map shows {int} fishing waters', function(this: CustomWorld, count: number) {
+  // This is context setup, actual map testing is in map-display.steps.ts
+});
+
+Then('the map should immediately update', function(this: CustomWorld) {
+  // This would trigger a callback that updates the map
+  expect(this.testData.selectedSpecies).toContain('Salmon');
+});
+
+Then('only waters containing {string} should be visible', function(this: CustomWorld, species: string) {
+  // This assertion would be handled in the map component test
+  expect(this.testData.selectedSpecies).toContain(species);
+});

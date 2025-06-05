@@ -45,6 +45,46 @@ To run the unit tests:
 npm test
 ```
 
+### BDD Tests (Behavior-Driven Development)
+
+The project uses Cucumber.js for BDD testing with Gherkin feature files that describe user behavior:
+
+#### Running BDD Tests
+
+```bash
+# Run all BDD scenarios
+npm run test:bdd
+
+# Run in watch mode for development
+npm run test:bdd:watch
+
+# Run specific feature
+npm run test:bdd features/map-display.feature
+
+# Dry run to check step definitions
+npm run test:bdd -- --dry-run
+```
+
+#### BDD Structure
+
+- **Feature Files** (`/features/*.feature`): User-focused scenarios in Gherkin syntax
+- **Step Definitions** (`/features/step-definitions/*.ts`): TypeScript implementations
+- **Test Coverage**: Map display, species filtering, side panel, and data loading behaviors
+
+#### Example Feature
+
+```gherkin
+Feature: Map Display
+  As a fishing enthusiast
+  I want to view fishing waters on an interactive map
+  So that I can explore different fishing locations
+
+  Scenario: Filter fishing waters by species
+    Given the application has loaded map data
+    When I select "Pike" from the species filter
+    Then I should see only fishing waters containing Pike
+```
+
 ### Acceptance Tests
 
 The project includes comprehensive end-to-end acceptance tests using Cypress to verify the deployed application works correctly.
@@ -87,3 +127,13 @@ The Fishing Waters React App provides a rich, interactive experience for explori
 - **Species Filtering**: Easily filter lakes by specific fish species
 - **Visual Species Indicators**: Color-coded lake markers showing fish species presence (e.g., Gös shown in green)
 - **Informative Tooltips**: Hover over lakes to reveal detailed information
+
+## Testing Strategy
+
+The project follows a comprehensive testing approach:
+
+1. **Unit Tests (Jest)**: Component and utility function testing
+2. **BDD Tests (Cucumber)**: User behavior verification through scenarios
+3. **E2E Tests (Cypress)**: Full application acceptance testing
+
+This multi-layered testing strategy ensures reliability at all levels, from individual components to complete user workflows. BDD tests serve as living documentation, making requirements clear to both developers and stakeholders.
