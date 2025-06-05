@@ -30,7 +30,8 @@
     "cypress:run": "cypress run",
     "test:acceptance": "cypress run --config baseUrl=https://larsakeekstrand.github.io/fishingwaters",
     "test:bdd": "cucumber-js",
-    "test:bdd:watch": "cucumber-js --watch"
+    "test:bdd:watch": "cucumber-js --watch",
+    "test:bdd:ci": "cucumber-js --config cucumber.ci.js"
   },
   "eslintConfig": {
     "extends": [

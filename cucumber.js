@@ -5,3 +5,8 @@ module.exports = {
     format: ['@cucumber/pretty-formatter', 'json:reports/cucumber-report.json']
   }
 };
+
+// Ensure ts-node uses CommonJS
+process.env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({
+  module: 'commonjs'
+});

@@ -1,5 +1,5 @@
 // Setup test environment for Cucumber
-import { JSDOM } from 'jsdom';
+const { JSDOM } = require('jsdom');
 
 // Create basic DOM environment
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
@@ -44,3 +44,6 @@ global.jest = {
   fn: () => () => {},
   mock: () => ({})
 } as any;
+
+// Make this a module
+export {};

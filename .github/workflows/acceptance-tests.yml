@@ -73,8 +73,9 @@ jobs:
         run: |
           # Configure BDD tests to run against production URL
           export BASE_URL=https://larsakeekstrand.github.io/fishingwaters
+          export NODE_ENV=test
           mkdir -p reports
-          npm run test:bdd
+          npm run test:bdd:ci
         continue-on-error: true
       
       - name: Upload BDD test report
