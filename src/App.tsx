@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   ThemeProvider, 
   createTheme, 
@@ -6,9 +6,10 @@ import {
   Box,
   Typography
 } from '@mui/material';
-import Map from './components/Map';
+import Map, { MapRef } from './components/Map';
 import SpeciesFilter from './components/SpeciesFilter';
 import SidePanel from './components/SidePanel';
+import LakeSearch from './components/LakeSearch';
 import { GeoJsonCollection, GeoJsonFeature } from './types/GeoJsonTypes';
 import { mergeGeoJsonCollections, removeBOM, convertLakeDataToGeoJson } from './utils/DataLoader';
 
@@ -37,6 +38,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [filteredSpecies, setFilteredSpecies] = useState<Set<string>>(new Set());
   const [selectedLake, setSelectedLake] = useState<GeoJsonFeature | null>(null);
+  const mapRef = useRef<MapRef>(null);
 
   useEffect(() => {
     fetchAllLakeData();
@@ -125,6 +127,13 @@ function App() {
     setFilteredSpecies(selectedSpecies);
   };
 
+  const handleLakeSearch = (lake: GeoJsonFeature) => {
+    setSelectedLake(lake);
+    // Center map on the selected lake
+    const [lng, lat] = lake.geometry.coordinates;
+    mapRef.current?.centerOnLocation(lat, lng, 12);
+  };
+
   if (isLoading) {
     return (
       <ThemeProvider theme={theme}>
@@ -169,10 +178,12 @@ function App() {
       <div className="app">
         <SidePanel selectedLake={selectedLake} />
         <Map
+          ref={mapRef}
           data={data}
           filteredSpecies={filteredSpecies}
           onLakeSelect={setSelectedLake}
         />
+        <LakeSearch features={data.features} onLakeSelect={handleLakeSearch} />
         <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
       </div>
     </ThemeProvider>
