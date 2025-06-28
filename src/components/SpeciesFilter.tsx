@@ -28,14 +28,15 @@ const StyledFilterPanel = styled(Paper, {
   position: 'absolute',
   top: theme.spacing(2),
   right: theme.spacing(2),
-  padding: theme.spacing(2),
+  padding: isMinimized ? theme.spacing(1.5) : theme.spacing(2),
   zIndex: 1000,
   maxHeight: '80vh',
   overflow: 'auto',
   width: isMinimized ? 'auto' : 250,
+  minWidth: isMinimized ? 120 : 'auto',
   boxShadow: theme.shadows[3],
   borderRadius: theme.shape.borderRadius,
-  transition: theme.transitions.create(['width'], {
+  transition: theme.transitions.create(['width', 'padding'], {
     duration: theme.transitions.duration.standard,
   })
 }));
@@ -94,15 +95,22 @@ const SpeciesFilter: React.FC<SpeciesFilterProps> = ({ features, onFilterChange 
   return (
     <StyledFilterPanel className="filter-panel" isMinimized={isMinimized}>
       <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Collapse in={!isMinimized} orientation="horizontal">
-          <Typography variant="subtitle1" color="primary" fontWeight="medium" className="filter-header">
-            Filtrera efter arter
-          </Typography>
-        </Collapse>
+        <Typography 
+          variant="subtitle1" 
+          color="primary" 
+          fontWeight="medium" 
+          className="filter-header"
+          sx={{ 
+            fontSize: isMinimized ? '0.875rem' : '1rem',
+            transition: 'font-size 0.3s ease'
+          }}
+        >
+          {isMinimized ? 'Filter' : 'Filtrera efter arter'}
+        </Typography>
         <IconButton 
           size="small" 
           onClick={() => setIsMinimized(!isMinimized)}
-          sx={{ ml: isMinimized ? 0 : 1 }}
+          sx={{ ml: 1 }}
         >
           {isMinimized ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </IconButton>
