@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   ThemeProvider, 
   createTheme, 
@@ -10,9 +10,10 @@ import {
   Fab
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import Map from './components/Map';
+import Map, { MapRef } from './components/Map';
 import SpeciesFilter from './components/SpeciesFilter';
 import SidePanel from './components/SidePanel';
+import SearchBar from './components/SearchBar';
 import { GeoJsonCollection, GeoJsonFeature } from './types/GeoJsonTypes';
 import { mergeGeoJsonCollections, removeBOM, convertLakeDataToGeoJson } from './utils/DataLoader';
 
@@ -45,6 +46,7 @@ function App() {
   
   const muiTheme = useMuiTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
+  const mapRef = useRef<MapRef>(null);
 
   useEffect(() => {
     fetchAllLakeData();
@@ -139,6 +141,14 @@ function App() {
       setDrawerOpen(true);
     }
   };
+  
+  const handleSearchSelect = (lake: GeoJsonFeature) => {
+    setSelectedLake(lake);
+    mapRef.current?.focusOnLake(lake);
+    if (isMobile) {
+      setDrawerOpen(true);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -191,11 +201,14 @@ function App() {
           />
         )}
         <Map
+          ref={mapRef}
           data={data}
           filteredSpecies={filteredSpecies}
+          selectedLake={selectedLake}
           onLakeSelect={handleLakeSelect}
         />
         <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
+        <SearchBar lakes={data.features} onLakeSelect={handleSearchSelect} />
         {isMobile && !drawerOpen && (
           <Fab
             color="primary"

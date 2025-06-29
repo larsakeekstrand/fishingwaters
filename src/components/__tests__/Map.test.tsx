@@ -52,7 +52,7 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} selectedLake={null} onLakeSelect={jest.fn()} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(2);
@@ -69,7 +69,7 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} selectedLake={null} onLakeSelect={jest.fn()} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -85,7 +85,7 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} selectedLake={null} onLakeSelect={jest.fn()} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -131,7 +131,7 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} />);
+    render(<Map data={data} filteredSpecies={new Set(['Gädda'])} selectedLake={null} onLakeSelect={jest.fn()} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(1);
@@ -161,7 +161,7 @@ describe('Map', () => {
     };
     const data = createMockData([feature]);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} selectedLake={null} onLakeSelect={jest.fn()} />);
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Test Lake');
@@ -196,7 +196,7 @@ describe('Map', () => {
     };
     const data = createMockData([feature]);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} selectedLake={null} onLakeSelect={jest.fn()} />);
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Vanligaste art: Gädda (45%)');
@@ -210,7 +210,7 @@ describe('Map', () => {
     ];
     const data = createMockData(features);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} selectedLake={null} onLakeSelect={jest.fn()} />);
 
     const markers = screen.getAllByTestId('circle-marker');
     expect(markers).toHaveLength(2);
@@ -237,7 +237,7 @@ describe('Map', () => {
     };
     const data = createMockData([feature]);
 
-    render(<Map data={data} filteredSpecies={new Set()} />);
+    render(<Map data={data} filteredSpecies={new Set()} selectedLake={null} onLakeSelect={jest.fn()} />);
 
     const tooltip = screen.getByTestId('tooltip');
     expect(tooltip).toHaveTextContent('Maxdjup: Okänt');

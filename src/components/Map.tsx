@@ -1,15 +1,34 @@
-import React from 'react';
+import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
+import { Map as LeafletMap } from 'leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
 
 interface MapProps {
   data: GeoJsonCollection;
   filteredSpecies: Set<string>;
+  selectedLake: GeoJsonFeature | null;
   onLakeSelect: (lake: GeoJsonFeature) => void;
 }
 
-const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
+export interface MapRef {
+  focusOnLake: (lake: GeoJsonFeature) => void;
+}
+
+const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake, onLakeSelect }, ref) => {
+  const mapRef = useRef<LeafletMap | null>(null);
   const swedenCenter: [number, number] = [62.0, 15.0];
+  
+  useImperativeHandle(ref, () => ({
+    focusOnLake: (lake: GeoJsonFeature) => {
+      if (mapRef.current) {
+        const [lng, lat] = lake.geometry.coordinates;
+        mapRef.current.setView([lat, lng], 10, {
+          animate: true,
+          duration: 1
+        });
+      }
+    }
+  }));
   
   // Filter features based on selected species
   const getFilteredFeatures = (): GeoJsonFeature[] => {
@@ -61,6 +80,7 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
       doubleClickZoom={true}
       scrollWheelZoom={true}
       zoomControl={true}
+      ref={mapRef}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -72,19 +92,24 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
         // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]
         const position: [number, number] = [coordinates[1], coordinates[0]]; 
         
-        const fillColor = filteredSpecies.size > 0 ? '#ff0000' : '#3388ff';
+        // Green for selected lake, red for filtered, blue for normal
+        const isSelected = selectedLake && 
+          selectedLake.geometry.coordinates[0] === feature.geometry.coordinates[0] && 
+          selectedLake.geometry.coordinates[1] === feature.geometry.coordinates[1];
+        
+        const fillColor = isSelected ? '#00ff00' : (filteredSpecies.size > 0 ? '#ff0000' : '#3388ff');
         
         return (
           <CircleMarker 
             key={index}
             center={position}
-            radius={8}
+            radius={isSelected ? 10 : 8}
             pathOptions={{
               fillColor,
-              color: '#fff',
-              weight: 2,
+              color: isSelected ? '#00cc00' : '#fff',
+              weight: isSelected ? 3 : 2,
               opacity: 1,
-              fillOpacity: 0.8
+              fillOpacity: isSelected ? 1 : 0.8
             }}
             eventHandlers={{
               click: () => onLakeSelect(feature)
@@ -109,6 +134,8 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
       })}
     </MapContainer>
   );
-};
+});
+
+Map.displayName = 'Map';
 
 export default Map;
