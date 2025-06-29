@@ -2,6 +2,8 @@
 
 A React application for visualizing fishing waters in Sweden.
 
+🌐 **Live Demo**: [https://larsakeekstrand.github.io/fishingwaters/](https://larsakeekstrand.github.io/fishingwaters/)
+
 ## Prerequisites
 
 - Node.js (v14 or higher)
