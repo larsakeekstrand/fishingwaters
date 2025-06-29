@@ -4,8 +4,12 @@ import {
   createTheme, 
   CssBaseline,
   Box,
-  Typography
+  Typography,
+  useMediaQuery,
+  useTheme as useMuiTheme,
+  Fab
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import Map from './components/Map';
 import SpeciesFilter from './components/SpeciesFilter';
 import SidePanel from './components/SidePanel';
@@ -37,6 +41,10 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [filteredSpecies, setFilteredSpecies] = useState<Set<string>>(new Set());
   const [selectedLake, setSelectedLake] = useState<GeoJsonFeature | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  
+  const muiTheme = useMuiTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
 
   useEffect(() => {
     fetchAllLakeData();
@@ -124,6 +132,13 @@ function App() {
   const handleFilterChange = (selectedSpecies: Set<string>) => {
     setFilteredSpecies(selectedSpecies);
   };
+  
+  const handleLakeSelect = (lake: GeoJsonFeature) => {
+    setSelectedLake(lake);
+    if (isMobile) {
+      setDrawerOpen(true);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -167,13 +182,35 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <div className="app">
-        <SidePanel selectedLake={selectedLake} />
+        {!isMobile && <SidePanel selectedLake={selectedLake} />}
+        {isMobile && (
+          <SidePanel 
+            selectedLake={selectedLake} 
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+          />
+        )}
         <Map
           data={data}
           filteredSpecies={filteredSpecies}
-          onLakeSelect={setSelectedLake}
+          onLakeSelect={handleLakeSelect}
         />
         <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
+        {isMobile && !drawerOpen && (
+          <Fab
+            color="primary"
+            aria-label="menu"
+            onClick={() => setDrawerOpen(true)}
+            sx={{
+              position: 'fixed',
+              bottom: 16,
+              left: 16,
+              zIndex: 1200
+            }}
+          >
+            <MenuIcon />
+          </Fab>
+        )}
       </div>
     </ThemeProvider>
   );

@@ -53,7 +53,15 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
   };
 
   return (
-    <MapContainer center={swedenCenter} zoom={5} style={{ height: '100vh', width: '100%' }}>
+    <MapContainer 
+      center={swedenCenter} 
+      zoom={5} 
+      style={{ height: '100vh', width: '100%' }}
+      touchZoom={true}
+      doubleClickZoom={true}
+      scrollWheelZoom={true}
+      zoomControl={true}
+    >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap bidragsgivare"
@@ -70,11 +78,11 @@ const Map: React.FC<MapProps> = ({ data, filteredSpecies, onLakeSelect }) => {
           <CircleMarker 
             key={index}
             center={position}
-            radius={5}
+            radius={8}
             pathOptions={{
               fillColor,
               color: '#fff',
-              weight: 1,
+              weight: 2,
               opacity: 1,
               fillOpacity: 0.8
             }}
