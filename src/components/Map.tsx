@@ -2,19 +2,21 @@ import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
 import { Map as LeafletMap } from 'leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
+import { calculateDistance } from '../utils/geoUtils';
 
 interface MapProps {
   data: GeoJsonCollection;
   filteredSpecies: Set<string>;
   selectedLake: GeoJsonFeature | null;
   onLakeSelect: (lake: GeoJsonFeature) => void;
+  radiusFilter?: {userLat: number, userLon: number, radius: number} | null;
 }
 
 export interface MapRef {
   focusOnLake: (lake: GeoJsonFeature) => void;
 }
 
-const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake, onLakeSelect }, ref) => {
+const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake, onLakeSelect, radiusFilter }, ref) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const swedenCenter: [number, number] = [62.0, 15.0];
   
@@ -57,6 +59,21 @@ const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake,
     });
   };
 
+  // Check if a lake is within the radius filter
+  const isLakeWithinRadius = (feature: GeoJsonFeature): boolean => {
+    if (!radiusFilter) return false;
+    
+    const [lakeLon, lakeLat] = feature.geometry.coordinates;
+    const distance = calculateDistance(
+      radiusFilter.userLat, 
+      radiusFilter.userLon, 
+      lakeLat, 
+      lakeLon
+    );
+    
+    return distance <= radiusFilter.radius;
+  };
+
 
   // Format caught species for display in tooltip
   const renderCaughtSpecies = (feature: GeoJsonFeature): string => {
@@ -92,12 +109,22 @@ const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake,
         // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]
         const position: [number, number] = [coordinates[1], coordinates[0]]; 
         
-        // Green for selected lake, red for filtered, blue for normal
+        // Color logic: Selected lake = bright green, lakes within radius = green, species filtered = red, normal = blue
         const isSelected = selectedLake && 
           selectedLake.geometry.coordinates[0] === feature.geometry.coordinates[0] && 
           selectedLake.geometry.coordinates[1] === feature.geometry.coordinates[1];
         
-        const fillColor = isSelected ? '#00ff00' : (filteredSpecies.size > 0 ? '#ff0000' : '#3388ff');
+        const isWithinRadius = isLakeWithinRadius(feature);
+        
+        let fillColor = '#3388ff'; // Default blue
+        
+        if (isSelected) {
+          fillColor = '#00ff00'; // Bright green for selected
+        } else if (isWithinRadius) {
+          fillColor = '#32cd32'; // Green for lakes within radius
+        } else if (filteredSpecies.size > 0) {
+          fillColor = '#ff0000'; // Red for species filtered
+        }
         
         return (
           <CircleMarker 
@@ -106,10 +133,10 @@ const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake,
             radius={isSelected ? 10 : 8}
             pathOptions={{
               fillColor,
-              color: isSelected ? '#00cc00' : '#fff',
-              weight: isSelected ? 3 : 2,
+              color: isSelected ? '#00cc00' : (isWithinRadius ? '#228b22' : '#fff'),
+              weight: isSelected ? 3 : (isWithinRadius ? 2.5 : 2),
               opacity: 1,
-              fillOpacity: isSelected ? 1 : 0.8
+              fillOpacity: isSelected ? 1 : (isWithinRadius ? 0.9 : 0.8)
             }}
             eventHandlers={{
               click: () => onLakeSelect(feature)

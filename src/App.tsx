@@ -43,6 +43,7 @@ function App() {
   const [filteredSpecies, setFilteredSpecies] = useState<Set<string>>(new Set());
   const [selectedLake, setSelectedLake] = useState<GeoJsonFeature | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [radiusFilter, setRadiusFilter] = useState<{userLat: number, userLon: number, radius: number} | null>(null);
   
   const muiTheme = useMuiTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
@@ -150,6 +151,13 @@ function App() {
     }
   };
 
+  const handleRadiusSearch = (userLat: number, userLon: number, radius: number) => {
+    setRadiusFilter({ userLat, userLon, radius });
+    // Clear other filters to focus on radius results
+    setFilteredSpecies(new Set());
+    setSelectedLake(null);
+  };
+
   if (isLoading) {
     return (
       <ThemeProvider theme={theme}>
@@ -206,9 +214,10 @@ function App() {
           filteredSpecies={filteredSpecies}
           selectedLake={selectedLake}
           onLakeSelect={handleLakeSelect}
+          radiusFilter={radiusFilter}
         />
         <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
-        <SearchBar lakes={data.features} onLakeSelect={handleSearchSelect} />
+        <SearchBar lakes={data.features} onLakeSelect={handleSearchSelect} onRadiusSearch={handleRadiusSearch} />
         {isMobile && !drawerOpen && (
           <Fab
             color="primary"
