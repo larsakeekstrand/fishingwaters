@@ -1,5 +1,5 @@
 import React, { useRef, useImperativeHandle, forwardRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Tooltip, LayersControl } from 'react-leaflet';
 import { Map as LeafletMap } from 'leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
 import { calculateDistance } from '../utils/geoUtils';
@@ -19,6 +19,18 @@ export interface MapRef {
 const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake, onLakeSelect, radiusFilter }, ref) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const swedenCenter: [number, number] = [62.0, 15.0];
+  
+  // Tile layer configurations
+  const tileLayers = {
+    openStreetMap: {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '&copy; OpenStreetMap contributors'
+    },
+    openTopoMap: {
+      url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+      attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap (CC-BY-SA)'
+    }
+  };
   
   useImperativeHandle(ref, () => ({
     focusOnLake: (lake: GeoJsonFeature) => {
@@ -99,11 +111,24 @@ const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake,
       zoomControl={true}
       ref={mapRef}
     >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap bidragsgivare"
-        maxZoom={19}
-      />
+      <LayersControl position="bottomright">
+        <LayersControl.BaseLayer checked name="OpenStreetMap">
+          <TileLayer
+            url={tileLayers.openStreetMap.url}
+            attribution={tileLayers.openStreetMap.attribution}
+            maxZoom={19}
+          />
+        </LayersControl.BaseLayer>
+        
+        <LayersControl.BaseLayer name="Topographical">
+          <TileLayer
+            url={tileLayers.openTopoMap.url}
+            attribution={tileLayers.openTopoMap.attribution}
+            maxZoom={17}
+          />
+        </LayersControl.BaseLayer>
+      </LayersControl>
+      
       {getFilteredFeatures().map((feature, index) => {
         const { coordinates } = feature.geometry;
         // Leaflet uses [lat, lng] whereas GeoJSON uses [lng, lat]

@@ -16,6 +16,16 @@ jest.mock('react-leaflet', () => ({
   Tooltip: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="tooltip">{children}</div>
   ),
+  LayersControl: Object.assign(
+    ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="layers-control">{children}</div>
+    ),
+    {
+      BaseLayer: ({ children }: { children: React.ReactNode }) => (
+        <div data-testid="base-layer">{children}</div>
+      ),
+    }
+  ),
 }));
 
 describe('Map', () => {
