@@ -24,6 +24,9 @@
   - SearchBar.tsx - Lake search with autocomplete and GPS location
   - SidePanel.tsx - Information panel for selected features
   - SpeciesFilter.tsx - Multi-select filter for fish species
+  - PressureChart.tsx - Air pressure visualization using Chart.js
+- /src/services/ - External service integrations
+  - weatherService.ts - api.met.no integration for pressure data
 - /src/types/ - TypeScript interfaces and type definitions
   - GeoJsonTypes.ts - Type definitions for GeoJSON features
   - proj4.d.ts - TypeScript declarations for proj4 library
@@ -56,5 +59,6 @@
 - Lake search with autocomplete and radius-based filtering
 - GPS location integration for nearby lake search
 - Species filtering with visual indicators (green for selected species)
+- Air pressure chart showing last 5 days history and 5 days forecast (from api.met.no)
 - Mobile-responsive design
 - Deployed at: https://larsakeekstrand.github.io/fishingwaters/

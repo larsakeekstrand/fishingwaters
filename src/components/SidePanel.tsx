@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GeoJsonFeature } from '../types/GeoJsonTypes';
 import { 
   Paper, 
@@ -25,6 +25,8 @@ import MyLocationIcon from '@mui/icons-material/MyLocation';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import CloseIcon from '@mui/icons-material/Close';
+import { PressureChart } from './PressureChart';
+import { WeatherService } from '../services/weatherService';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
@@ -63,7 +65,28 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open = true, onClos
   const [manualAddress, setManualAddress] = useState('');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [pressureData, setPressureData] = useState<any>(null);
+  const [pressureLoading, setPressureLoading] = useState(false);
+  const [pressureError, setPressureError] = useState<string | null>(null);
   
+  useEffect(() => {
+    if (selectedLake) {
+      const [lng, lat] = selectedLake.geometry.coordinates;
+      setPressureLoading(true);
+      setPressureError(null);
+      
+      WeatherService.fetchPressureData(lat, lng)
+        .then(data => {
+          setPressureData(data);
+          setPressureLoading(false);
+        })
+        .catch(error => {
+          setPressureError('Kunde inte hämta väderdata');
+          setPressureLoading(false);
+        });
+    }
+  }, [selectedLake]);
+
   const renderCaughtSpecies = (species: string[] | string | undefined): string => {
     if (!species) return 'Inga rapporterade';
     if (Array.isArray(species)) return species.join(', ');
@@ -191,6 +214,14 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open = true, onClos
                 />
               </ListItem>
             </List>
+            
+            <Divider sx={{ my: 2 }} />
+            
+            <PressureChart 
+              data={pressureData}
+              loading={pressureLoading}
+              error={pressureError}
+            />
           </ContentSection>
           
           <DirectionsSection>
