@@ -10,7 +10,6 @@ interface PressureData {
 
 const WEATHER_API_BASE_URL = 'https://api.met.no/weatherapi/locationforecast/2.0';
 const HISTORICAL_API_BASE_URL = 'https://archive-api.open-meteo.com/v1/archive';
-const USER_AGENT = 'FishingWatersApp/1.0 (https://github.com/larsakeekstrand/fishingwaters)';
 
 export class WeatherService {
   private static cache = new Map<string, { data: PressureData; timestamp: number }>();
