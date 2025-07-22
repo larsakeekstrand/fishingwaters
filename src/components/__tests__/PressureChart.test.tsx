@@ -39,7 +39,7 @@ describe('PressureChart', () => {
   it('should render chart when data is provided', () => {
     render(<PressureChart data={mockData} loading={false} error={null} />);
     expect(screen.getByText('Lufttrycksanalys')).toBeInTheDocument();
-    expect(screen.getByText(/Data från api.met.no/)).toBeInTheDocument();
+    expect(screen.getByText(/Historisk: Open-Meteo/)).toBeInTheDocument();
   });
 
   it('should return null when no data and not loading', () => {

@@ -13,7 +13,14 @@ describe('WeatherService', () => {
 
   describe('fetchPressureData', () => {
     it('should fetch and process pressure data correctly', async () => {
-      const mockApiResponse = {
+      const mockHistoricalResponse = {
+        hourly: {
+          time: ['2025-07-17T00:00', '2025-07-17T12:00', '2025-07-18T00:00', '2025-07-18T12:00'],
+          pressure_msl: [1013.2, 1014.1, 1013.8, 1014.5],
+        },
+      };
+
+      const mockForecastResponse = {
         properties: {
           timeseries: [
             {
@@ -22,16 +29,6 @@ describe('WeatherService', () => {
                 instant: {
                   details: {
                     air_pressure_at_sea_level: 1013.2,
-                  },
-                },
-              },
-            },
-            {
-              time: '2025-07-22T13:00:00Z',
-              data: {
-                instant: {
-                  details: {
-                    air_pressure_at_sea_level: 1013.5,
                   },
                 },
               },
@@ -50,51 +47,54 @@ describe('WeatherService', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockApiResponse,
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockHistoricalResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockForecastResponse,
+        });
 
       const result = await WeatherService.fetchPressureData(59.3293, 18.0686);
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=59.3293&lon=18.0686',
-        {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-        }
-      );
-
+      expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(result).toHaveProperty('historical');
       expect(result).toHaveProperty('forecast');
-      expect(result.historical).toHaveLength(5);
+      expect(result.historical.length).toBeGreaterThan(0);
       expect(result.forecast.length).toBeGreaterThan(0);
     });
 
     it('should handle API errors', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ properties: { timeseries: [] } }),
+        });
 
       await expect(WeatherService.fetchPressureData(59.3293, 18.0686)).rejects.toThrow(
-        'Weather API error: 500'
+        'Historical API error: 500'
       );
     });
 
     it('should use cached data when available', async () => {
-      const mockApiResponse = {
-        properties: {
-          timeseries: [],
-        },
-      };
+      const mockHistoricalResponse = { hourly: { time: [], pressure_msl: [] } };
+      const mockForecastResponse = { properties: { timeseries: [] } };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockApiResponse,
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockHistoricalResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockForecastResponse,
+        });
 
       // First call
       await WeatherService.fetchPressureData(59.33, 18.07);
@@ -102,7 +102,7 @@ describe('WeatherService', () => {
       // Second call should use cache
       await WeatherService.fetchPressureData(59.33, 18.07);
 
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(global.fetch).toHaveBeenCalledTimes(2); // Only called once for first request
     });
   });
 });

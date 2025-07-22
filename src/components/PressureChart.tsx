@@ -126,7 +126,7 @@ export const PressureChart: React.FC<PressureChartProps> = ({ data, loading, err
         <Line data={chartData} options={options} />
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-        Data från api.met.no • Blå: Historisk • Röd: Prognos
+        Historisk: Open-Meteo • Prognos: api.met.no • Blå: Historisk • Röd: Prognos
       </Typography>
     </Box>
   );
