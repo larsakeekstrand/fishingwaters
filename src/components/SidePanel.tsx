@@ -35,12 +35,13 @@ interface SidePanelProps {
 }
 
 const StyledSidePanel = styled(Paper)(({ theme }) => ({
-  width: 300,
+  width: '100%',
   padding: theme.spacing(3),
-  height: '100vh',
+  height: '100%',
   overflow: 'auto',
-  boxShadow: theme.shadows[3],
-  zIndex: 1000,
+  boxShadow: 'none',
+  borderRadius: 0,
+  borderRight: `1px solid ${theme.palette.divider}`,
   position: 'relative',
   display: 'flex',
   flexDirection: 'column'

@@ -125,7 +125,7 @@ const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake,
     <MapContainer 
       center={swedenCenter} 
       zoom={5} 
-      style={{ height: '100vh', width: '100%' }}
+      style={{ height: '100%', width: '100%' }}
       touchZoom={true}
       doubleClickZoom={true}
       scrollWheelZoom={true}

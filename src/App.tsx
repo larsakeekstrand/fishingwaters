@@ -6,17 +6,12 @@ import {
   Box,
   Typography,
   useMediaQuery,
-  useTheme as useMuiTheme,
-  Fab,
-  FormControlLabel,
-  Switch
+  useTheme as useMuiTheme
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import AnchorIcon from '@mui/icons-material/Anchor';
 import Map, { MapRef } from './components/Map';
-import SpeciesFilter from './components/SpeciesFilter';
 import SidePanel from './components/SidePanel';
-import SearchBar from './components/SearchBar';
+import AppHeader from './components/AppHeader';
+import MobileControlPanel from './components/MobileControlPanel';
 import { GeoJsonCollection, GeoJsonFeature } from './types/GeoJsonTypes';
 import { mergeGeoJsonCollections, removeBOM, convertLakeDataToGeoJson } from './utils/DataLoader';
 
@@ -46,6 +41,7 @@ function App() {
   const [filteredSpecies, setFilteredSpecies] = useState<Set<string>>(new Set());
   const [selectedLake, setSelectedLake] = useState<GeoJsonFeature | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [mobileControlsOpen, setMobileControlsOpen] = useState<boolean>(false);
   const [radiusFilter, setRadiusFilter] = useState<{userLat: number, userLon: number, radius: number} | null>(null);
   const [showBoatRamps, setShowBoatRamps] = useState<boolean>(false);
   
@@ -203,67 +199,78 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <div className="app">
-        {!isMobile && <SidePanel selectedLake={selectedLake} />}
-        {isMobile && (
-          <SidePanel 
-            selectedLake={selectedLake} 
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-          />
-        )}
-        <Map
-          ref={mapRef}
-          data={data}
-          filteredSpecies={filteredSpecies}
-          selectedLake={selectedLake}
-          onLakeSelect={handleLakeSelect}
-          radiusFilter={radiusFilter}
+      <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+        {/* Header */}
+        <AppHeader
+          lakes={data.features}
+          features={data.features}
+          onLakeSelect={handleSearchSelect}
+          onFilterChange={handleFilterChange}
+          onRadiusSearch={handleRadiusSearch}
           showBoatRamps={showBoatRamps}
+          onBoatRampsToggle={setShowBoatRamps}
+          onMobileMenuOpen={() => setMobileControlsOpen(true)}
+          selectedSpeciesCount={filteredSpecies.size}
+          selectedSpecies={filteredSpecies}
         />
-        <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
-        <SearchBar lakes={data.features} onLakeSelect={handleSearchSelect} onRadiusSearch={handleRadiusSearch} />
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 180,
-            right: 10,
-            zIndex: 1000,
-            backgroundColor: 'white',
-            padding: 1,
-            borderRadius: 1,
-            boxShadow: 2
-          }}
-        >
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showBoatRamps}
-                onChange={(e) => setShowBoatRamps(e.target.checked)}
-                icon={<AnchorIcon />}
-                checkedIcon={<AnchorIcon />}
-                color="primary"
-              />
-            }
-            label="Båtramper"
-          />
+        
+        {/* Main Content Area */}
+        <Box sx={{ 
+          display: 'flex', 
+          width: '100%',
+          mt: isMobile ? 7 : 8, // Account for header height (56px = 7 * 8px, 64px = 8 * 8px)
+          position: 'relative'
+        }}>
+          {/* Side Panel - Desktop */}
+          {!isMobile && (
+            <Box sx={{ 
+              width: 300, 
+              flexShrink: 0,
+              height: `calc(100vh - ${isMobile ? 56 : 64}px)`,
+              overflow: 'hidden'
+            }}>
+              <SidePanel selectedLake={selectedLake} />
+            </Box>
+          )}
+          
+          {/* Map */}
+          <Box sx={{ flexGrow: 1, position: 'relative', height: `calc(100vh - ${isMobile ? 56 : 64}px)` }}>
+            <Map
+              ref={mapRef}
+              data={data}
+              filteredSpecies={filteredSpecies}
+              selectedLake={selectedLake}
+              onLakeSelect={handleLakeSelect}
+              radiusFilter={radiusFilter}
+              showBoatRamps={showBoatRamps}
+            />
+          </Box>
         </Box>
-        {isMobile && !drawerOpen && (
-          <Fab
-            color="primary"
-            aria-label="menu"
-            onClick={() => setDrawerOpen(true)}
-            sx={{
-              position: 'fixed',
-              bottom: 16,
-              left: 16,
-              zIndex: 1200
-            }}
-          >
-            <MenuIcon />
-          </Fab>
+        
+        {/* Mobile Controls */}
+        {isMobile && (
+          <>
+            <MobileControlPanel
+              open={mobileControlsOpen}
+              onClose={() => setMobileControlsOpen(false)}
+              onOpen={() => setMobileControlsOpen(true)}
+              features={data.features}
+              onFilterChange={handleFilterChange}
+              selectedSpecies={filteredSpecies}
+              showBoatRamps={showBoatRamps}
+              onBoatRampsToggle={setShowBoatRamps}
+              onRadiusSearch={handleRadiusSearch}
+            />
+            
+            {/* Mobile Side Panel for Lake Details */}
+            <SidePanel 
+              selectedLake={selectedLake} 
+              open={drawerOpen}
+              onClose={() => setDrawerOpen(false)}
+            />
+          </>
         )}
-      </div>
+      </Box>
     </ThemeProvider>
   );
 }
