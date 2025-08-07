@@ -1,8 +1,10 @@
-import React, { useRef, useImperativeHandle, forwardRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Tooltip, LayersControl } from 'react-leaflet';
-import { Map as LeafletMap } from 'leaflet';
+import React, { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Tooltip, LayersControl, Marker, Popup } from 'react-leaflet';
+import { Map as LeafletMap, Icon } from 'leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
 import { calculateDistance } from '../utils/geoUtils';
+import { BoatRampFeature } from '../types/BoatRampTypes';
+import boatRampService from '../services/boatRampService';
 
 interface MapProps {
   data: GeoJsonCollection;
@@ -10,15 +12,34 @@ interface MapProps {
   selectedLake: GeoJsonFeature | null;
   onLakeSelect: (lake: GeoJsonFeature) => void;
   radiusFilter?: {userLat: number, userLon: number, radius: number} | null;
+  showBoatRamps?: boolean;
 }
 
 export interface MapRef {
   focusOnLake: (lake: GeoJsonFeature) => void;
 }
 
-const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake, onLakeSelect, radiusFilter }, ref) => {
+const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake, onLakeSelect, radiusFilter, showBoatRamps = false }, ref) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const swedenCenter: [number, number] = [62.0, 15.0];
+  const [boatRamps, setBoatRamps] = useState<BoatRampFeature[]>([]);
+  
+  // Use the same boat ramp icon as batramper.se
+  const boatRampIcon = new Icon({
+    iconUrl: 'https://www.batramper.se/images/ramp.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+    className: 'boat-ramp-icon'
+  });
+  
+  useEffect(() => {
+    if (showBoatRamps) {
+      boatRampService.loadBoatRamps().then(data => {
+        setBoatRamps(data.features);
+      });
+    }
+  }, [showBoatRamps]);
   
   // Tile layer configurations
   const tileLayers = {
@@ -128,6 +149,28 @@ const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake,
           />
         </LayersControl.BaseLayer>
       </LayersControl>
+      
+      {showBoatRamps && boatRamps.map((ramp, index) => {
+        const [lng, lat] = ramp.geometry.coordinates;
+        const position: [number, number] = [lat, lng];
+        
+        return (
+          <Marker 
+            key={`ramp-${index}`}
+            position={position}
+            icon={boatRampIcon}
+          >
+            <Popup>
+              <div>
+                <strong>{ramp.properties.name}</strong><br />
+                <a href={ramp.properties.url} target="_blank" rel="noopener noreferrer">
+                  Mer information
+                </a>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
       
       {getFilteredFeatures().map((feature, index) => {
         const { coordinates } = feature.geometry;

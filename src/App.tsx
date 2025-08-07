@@ -7,9 +7,12 @@ import {
   Typography,
   useMediaQuery,
   useTheme as useMuiTheme,
-  Fab
+  Fab,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import AnchorIcon from '@mui/icons-material/Anchor';
 import Map, { MapRef } from './components/Map';
 import SpeciesFilter from './components/SpeciesFilter';
 import SidePanel from './components/SidePanel';
@@ -44,6 +47,7 @@ function App() {
   const [selectedLake, setSelectedLake] = useState<GeoJsonFeature | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const [radiusFilter, setRadiusFilter] = useState<{userLat: number, userLon: number, radius: number} | null>(null);
+  const [showBoatRamps, setShowBoatRamps] = useState<boolean>(false);
   
   const muiTheme = useMuiTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
@@ -215,9 +219,35 @@ function App() {
           selectedLake={selectedLake}
           onLakeSelect={handleLakeSelect}
           radiusFilter={radiusFilter}
+          showBoatRamps={showBoatRamps}
         />
         <SpeciesFilter features={data.features} onFilterChange={handleFilterChange} />
         <SearchBar lakes={data.features} onLakeSelect={handleSearchSelect} onRadiusSearch={handleRadiusSearch} />
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 180,
+            right: 10,
+            zIndex: 1000,
+            backgroundColor: 'white',
+            padding: 1,
+            borderRadius: 1,
+            boxShadow: 2
+          }}
+        >
+          <FormControlLabel
+            control={
+              <Switch
+                checked={showBoatRamps}
+                onChange={(e) => setShowBoatRamps(e.target.checked)}
+                icon={<AnchorIcon />}
+                checkedIcon={<AnchorIcon />}
+                color="primary"
+              />
+            }
+            label="Båtramper"
+          />
+        </Box>
         {isMobile && !drawerOpen && (
           <Fab
             color="primary"
