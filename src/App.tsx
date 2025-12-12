@@ -60,8 +60,6 @@ function App() {
       // First, fetch the list of files from the data directory index
       const indexResponse = await fetch(`${BASE_PATH}/data/index.json`);
       
-      console.log('Index response status:', indexResponse.status);
-      console.log('Content-Type:', indexResponse.headers.get('content-type'));
 
       let fileList: string[] = [];
       
@@ -70,11 +68,9 @@ function App() {
         try {
           // Store the response text first
           const responseText = await indexResponse.text();
-          console.log('Raw response:', responseText);
           
           // Then parse it as JSON
           const indexData = JSON.parse(responseText);
-          console.log('Index data:', indexData);
           fileList = indexData.files || [];
         } catch (jsonError) {
           console.error('Error parsing index.json:', jsonError);
@@ -103,11 +99,9 @@ function App() {
               
              if (Array.isArray(jsonData)) {
                 // Convert raw lake data array to GeoJSON format
-                console.log(`Converting raw data array from file ${fileName} to GeoJSON`);
                 try {
                   const convertedData = convertLakeDataToGeoJson(jsonData);
                   collections.push(convertedData);
-                  console.log(`Successfully converted ${fileName} with ${convertedData.features.length} features`);
                 } catch (conversionError) {
                   console.error(`Error converting ${fileName} to GeoJSON:`, conversionError);
                 }
