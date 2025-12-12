@@ -15,7 +15,7 @@ import MobileControlPanel from './components/MobileControlPanel';
 import { GeoJsonCollection, GeoJsonFeature } from './types/GeoJsonTypes';
 import { mergeGeoJsonCollections, removeBOM, convertLakeDataToGeoJson } from './utils/DataLoader';
 
-export const BASE_PATH = process.env.PUBLIC_URL || '/fishingwaters';
+export const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, '') || '/fishingwaters';
 
 const theme = createTheme({
   palette: {

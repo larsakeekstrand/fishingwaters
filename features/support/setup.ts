@@ -5,11 +5,11 @@ const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
 
 // Set up globals
-global.window = dom.window as any;
-global.document = dom.window.document;
+(globalThis as any).window = dom.window;
+(globalThis as any).document = dom.window.document;
 
 // Simple expect implementation for BDD tests
-(global as any).expect = (actual: any) => ({
+(globalThis as any).expect = (actual: any) => ({
   toBe: (expected: any) => {
     if (actual !== expected) {
       throw new Error(`Expected ${actual} to be ${expected}`);
@@ -40,10 +40,10 @@ global.document = dom.window.document;
 });
 
 // Simple jest mock
-global.jest = {
+(globalThis as any).jest = {
   fn: () => () => {},
   mock: () => ({})
-} as any;
+};
 
 // Make this a module
 export {};

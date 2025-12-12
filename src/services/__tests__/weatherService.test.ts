@@ -1,14 +1,15 @@
+import { vi, Mock } from 'vitest';
 import { WeatherService } from '../weatherService';
 
 describe('WeatherService', () => {
   beforeEach(() => {
-    global.fetch = jest.fn();
+    global.fetch = vi.fn();
     // Clear the cache before each test
     (WeatherService as any).cache.clear();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('fetchPressureData', () => {
@@ -47,7 +48,7 @@ describe('WeatherService', () => {
         },
       };
 
-      (global.fetch as jest.Mock)
+      (global.fetch as Mock)
         .mockResolvedValueOnce({
           ok: true,
           json: async () => mockHistoricalResponse,
@@ -67,7 +68,7 @@ describe('WeatherService', () => {
     });
 
     it('should handle API errors', async () => {
-      (global.fetch as jest.Mock)
+      (global.fetch as Mock)
         .mockResolvedValueOnce({
           ok: false,
           status: 500,
@@ -86,7 +87,7 @@ describe('WeatherService', () => {
       const mockHistoricalResponse = { hourly: { time: [], pressure_msl: [] } };
       const mockForecastResponse = { properties: { timeseries: [] } };
 
-      (global.fetch as jest.Mock)
+      (global.fetch as Mock)
         .mockResolvedValueOnce({
           ok: true,
           json: async () => mockHistoricalResponse,

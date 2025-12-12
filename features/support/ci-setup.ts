@@ -3,17 +3,17 @@
 
 // Setup jest and expect globals first
 try {
-  global.jest = require('jest-mock');
+  (globalThis as any).jest = require('jest-mock');
 } catch (e) {
   console.log('jest-mock not available, using simple mock');
-  global.jest = {
+  (globalThis as any).jest = {
     fn: () => () => {},
     mock: () => ({})
-  } as any;
+  };
 }
 
 // Simple expect implementation for CI
-(global as any).expect = (actual: any) => ({
+(globalThis as any).expect = (actual: any) => ({
   toBe: (expected: any) => {
     if (actual !== expected) {
       throw new Error(`Expected ${actual} to be ${expected}`);
@@ -48,11 +48,11 @@ if (typeof window === 'undefined') {
   try {
     const { JSDOM } = require('jsdom');
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
-    
-    global.window = dom.window as any;
-    global.document = dom.window.document;
-    global.HTMLElement = dom.window.HTMLElement;
-    global.Element = dom.window.Element;
+
+    (globalThis as any).window = dom.window;
+    (globalThis as any).document = dom.window.document;
+    (globalThis as any).HTMLElement = dom.window.HTMLElement;
+    (globalThis as any).Element = dom.window.Element;
   } catch (e) {
     console.log('JSDOM setup failed, tests may not work properly:', e);
   }

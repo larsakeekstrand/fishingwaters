@@ -1,6 +1,6 @@
 import { BoatRampCollection, BoatRampFeature } from '../types/BoatRampTypes';
 
-const BASE_PATH = process.env.PUBLIC_URL || '/fishingwaters';
+const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, '') || '/fishingwaters';
 
 class BoatRampService {
   private boatRampsCache: BoatRampCollection | null = null;
