@@ -78,20 +78,3 @@ jobs:
           name: cypress-screenshots
           path: cypress/screenshots
           retention-days: 7
-      
-      - name: Run BDD Tests against production
-        run: |
-          # Configure BDD tests to run against production URL
-          export BASE_URL=https://larsakeekstrand.github.io/fishingwaters
-          export NODE_ENV=test
-          mkdir -p reports
-          npm run test:bdd:ci features/map-display.feature features/health-check.feature
-        continue-on-error: true
-      
-      - name: Upload BDD test report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: bdd-acceptance-report
-          path: reports/cucumber-report.json
-          retention-days: 7

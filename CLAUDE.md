@@ -3,8 +3,7 @@
 ## Commands
 - Build: `npm start` (dev), `npm run build` (production)
 - Deploy: `npm run deploy` (builds and deploys to GitHub Pages)
-- Test: `npm test` (all tests with --watchAll=false)
-- BDD: `npm run test:bdd` (run cucumber tests), `npm run test:bdd:watch` (watch mode), `npm run test:bdd:ci` (CI mode)
+- Test: `npm test` (unit tests)
 - E2E: `npm run cypress` (interactive), `npm run cypress:run` (headless)
 - Acceptance: `npm run test:acceptance` (against production at https://larsakeekstrand.github.io/fishingwaters)
 
@@ -38,19 +37,12 @@
   - index.json - List of available region files
   - Sverige_2025-05-12.json - Complete Swedish dataset
   - Regional files (Blekinge, Halland, etc.)
-- /features/ - BDD feature files and step definitions
-  - *.feature - Gherkin scenarios describing behavior
-  - /step-definitions/ - Implementation of feature steps
-  - /support/ - Test setup and world configuration
 - /cypress/ - End-to-end test files and support
 - /coverage/ - Test coverage reports (generated)
 - /build/ - Production build output (generated)
 
-## Testing Strategy (BDD)
-- Feature files describe user behavior in Gherkin syntax
-- Step definitions implement the Given/When/Then steps
-- Unit tests follow BDD naming: Given/When/Then structure
-- Integration between Cucumber (BDD) and Jest (unit tests)
+## Testing Strategy
+- Unit tests with Vitest and React Testing Library
 - Cypress for end-to-end acceptance testing
 - Coverage reports available in /coverage/lcov-report/index.html
 

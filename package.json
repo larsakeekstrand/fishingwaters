@@ -29,14 +29,9 @@
     "test:watch": "vitest",
     "cypress": "cypress open",
     "cypress:run": "cypress run",
-    "test:acceptance": "cypress run --config baseUrl=https://larsakeekstrand.github.io/fishingwaters",
-    "test:bdd": "cucumber-js",
-    "test:bdd:watch": "cucumber-js --watch",
-    "test:bdd:ci": "cucumber-js --config cucumber.ci.js"
+    "test:acceptance": "cypress run --config baseUrl=https://larsakeekstrand.github.io/fishingwaters"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "^11.3.0",
-    "@cucumber/pretty-formatter": "^1.0.1",
     "@cypress/xpath": "^2.0.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
