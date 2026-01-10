@@ -1,0 +1,34 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read(./**)",
+      "Write(./**)",
+      "Edit(./**)",
+      "Glob(./**)",
+      "Grep(./**)",
+      "Read(/Users/laek/source/fishingwaters/**)",
+      "Write(/Users/laek/source/fishingwaters/**)",
+      "Edit(/Users/laek/source/fishingwaters/**)",
+      "Glob(/Users/laek/source/fishingwaters/**)",
+      "Grep(/Users/laek/source/fishingwaters/**)",
+      "Read(/Users/laek/source/fishingwaters/.auto-claude/specs/001-more-mobile-friendly-ux/**)",
+      "Write(/Users/laek/source/fishingwaters/.auto-claude/specs/001-more-mobile-friendly-ux/**)",
+      "Edit(/Users/laek/source/fishingwaters/.auto-claude/specs/001-more-mobile-friendly-ux/**)",
+      "Bash(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__context7__resolve-library-id(*)",
+      "mcp__context7__get-library-docs(*)",
+      "mcp__graphiti-memory__search_nodes(*)",
+      "mcp__graphiti-memory__search_facts(*)",
+      "mcp__graphiti-memory__add_episode(*)",
+      "mcp__graphiti-memory__get_episodes(*)",
+      "mcp__graphiti-memory__get_entity_edge(*)"
+    ]
+  }
+}
