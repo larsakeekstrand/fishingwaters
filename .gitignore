@@ -27,3 +27,6 @@ yarn-error.log*
 
 # Auto Claude data directory
 .auto-claude/
+
+# Git worktrees
+.worktrees/
