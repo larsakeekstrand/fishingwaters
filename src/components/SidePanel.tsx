@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { GeoJsonFeature } from '../types/GeoJsonTypes';
-import { 
-  Paper, 
-  Typography, 
-  List, 
-  ListItem, 
-  ListItemText, 
+import {
+  Paper,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
   Divider,
   Box,
   Button,
@@ -15,8 +15,9 @@ import {
   Stack,
   CircularProgress,
   Alert,
-  Drawer,
+  SwipeableDrawer,
   IconButton,
+  Slide,
   useMediaQuery,
   useTheme
 } from '@mui/material';
@@ -30,22 +31,9 @@ import { WeatherService } from '../services/weatherService';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
-  open?: boolean;
-  onClose?: () => void;
+  open: boolean;
+  onClose: () => void;
 }
-
-const StyledSidePanel = styled(Paper)(({ theme }) => ({
-  width: '100%',
-  padding: theme.spacing(3),
-  height: '100%',
-  overflow: 'auto',
-  boxShadow: 'none',
-  borderRadius: 0,
-  borderRight: `1px solid ${theme.palette.divider}`,
-  position: 'relative',
-  display: 'flex',
-  flexDirection: 'column'
-}));
 
 const ContentSection = styled(Box)({
   flex: '1 1 auto',
@@ -59,7 +47,7 @@ const DirectionsSection = styled(Box)(({ theme }) => ({
   borderTop: `1px solid ${theme.palette.divider}`
 }));
 
-const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open = true, onClose }) => {
+const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open, onClose }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [locationType, setLocationType] = useState<'current' | 'manual'>('current');
@@ -69,37 +57,44 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open = true, onClos
   const [pressureData, setPressureData] = useState<any>(null);
   const [pressureLoading, setPressureLoading] = useState(false);
   const [pressureError, setPressureError] = useState<string | null>(null);
-  
+  const [mobileExpanded, setMobileExpanded] = useState(false);
+
   useEffect(() => {
     if (selectedLake) {
       const [lng, lat] = selectedLake.geometry.coordinates;
       setPressureLoading(true);
       setPressureError(null);
-      
+
       WeatherService.fetchPressureData(lat, lng)
         .then(data => {
           setPressureData(data);
           setPressureLoading(false);
         })
-        .catch(error => {
+        .catch(() => {
           setPressureError('Kunde inte hämta väderdata');
           setPressureLoading(false);
         });
     }
   }, [selectedLake]);
 
+  useEffect(() => {
+    if (!open) {
+      setMobileExpanded(false);
+    }
+  }, [open]);
+
   const renderCaughtSpecies = (species: string[] | string | undefined): string => {
     if (!species) return 'Inga rapporterade';
     if (Array.isArray(species)) return species.join(', ');
     return species;
   };
-  
+
   const handleGetDirections = async () => {
     setLocationError(null);
-    
+
     if (locationType === 'current') {
       setIsGettingLocation(true);
-      
+
       if (!navigator.geolocation) {
         setLocationError('Din webbläsare stöder inte geolokalisering');
         setIsGettingLocation(false);
@@ -142,16 +137,8 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open = true, onClos
     window.open(url, '_blank');
   };
 
-  const content = (
+  const fullContent = (
     <>
-      {isMobile && onClose && (
-        <Box display="flex" justifyContent="flex-end" mb={1}>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon />
-          </IconButton>
-        </Box>
-      )}
-      
       {!selectedLake ? (
         <Box display="flex" justifyContent="center" alignItems="center" height="100%">
           <Typography variant="body1" color="text.secondary">
@@ -167,75 +154,75 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open = true, onClos
             <Divider sx={{ mb: 2 }} />
             <List disablePadding>
               <ListItem sx={{ py: 1 }}>
-                <ListItemText 
-                  primary="Maxdjup" 
-                  secondary={selectedLake.properties.maxDepth !== null ? `${selectedLake.properties.maxDepth} m` : 'Okänt'} 
+                <ListItemText
+                  primary="Maxdjup"
+                  secondary={selectedLake.properties.maxDepth !== null ? `${selectedLake.properties.maxDepth} m` : 'Okänt'}
                 />
               </ListItem>
               <ListItem sx={{ py: 1 }}>
-                <ListItemText 
-                  primary="Area" 
+                <ListItemText
+                  primary="Area"
                   secondary={selectedLake.properties.area !== null && selectedLake.properties.area !== undefined
                     ? `${selectedLake.properties.area.toLocaleString()} ha`
-                    : 'Okänd'} 
+                    : 'Okänd'}
                 />
               </ListItem>
               <ListItem sx={{ py: 1 }}>
-                <ListItemText 
-                  primary="Län" 
-                  secondary={selectedLake.properties.county} 
+                <ListItemText
+                  primary="Län"
+                  secondary={selectedLake.properties.county}
                 />
               </ListItem>
               <ListItem sx={{ py: 1 }}>
-                <ListItemText 
-                  primary="Fångade arter" 
-                  secondary={renderCaughtSpecies(selectedLake.properties.catchedSpecies || selectedLake.properties.fångadeArter)} 
+                <ListItemText
+                  primary="Fångade arter"
+                  secondary={renderCaughtSpecies(selectedLake.properties.catchedSpecies || selectedLake.properties.fångadeArter)}
                 />
               </ListItem>
               <ListItem sx={{ py: 1 }}>
-                <ListItemText 
-                  primary="Vanligaste art" 
+                <ListItemText
+                  primary="Vanligaste art"
                   secondary={selectedLake.properties.vanlArt
                     ? `${selectedLake.properties.vanlArt} (${selectedLake.properties.vanlArtWProc}%)`
-                    : 'Okänd'} 
+                    : 'Okänd'}
                 />
               </ListItem>
               <ListItem sx={{ py: 1 }}>
-                <ListItemText 
-                  primary="Näst vanligaste art" 
+                <ListItemText
+                  primary="Näst vanligaste art"
                   secondary={selectedLake.properties.nästVanlArt
                     ? `${selectedLake.properties.nästVanlArt} (${selectedLake.properties.nästVanlArtWProc}%)`
-                    : 'Okänd'} 
+                    : 'Okänd'}
                 />
               </ListItem>
               <ListItem sx={{ py: 1 }}>
-                <ListItemText 
-                  primary="Senaste fiskeår" 
-                  secondary={selectedLake.properties.senasteFiskeår || 'Okänt'} 
+                <ListItemText
+                  primary="Senaste fiskeår"
+                  secondary={selectedLake.properties.senasteFiskeår || 'Okänt'}
                 />
               </ListItem>
             </List>
-            
+
             <Divider sx={{ my: 2 }} />
-            
-            <PressureChart 
+
+            <PressureChart
               data={pressureData}
               loading={pressureLoading}
               error={pressureError}
             />
           </ContentSection>
-          
+
           <DirectionsSection>
             <Typography variant="subtitle2" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <DirectionsIcon fontSize="small" />
               Vägbeskrivning
             </Typography>
-            
+
             <Stack spacing={2}>
               <ToggleButtonGroup
                 value={locationType}
                 exclusive
-                onChange={(e, newValue) => newValue && setLocationType(newValue)}
+                onChange={(_e, newValue) => newValue && setLocationType(newValue)}
                 size="small"
                 fullWidth
               >
@@ -248,7 +235,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open = true, onClos
                   Ange adress
                 </ToggleButton>
               </ToggleButtonGroup>
-              
+
               {locationType === 'manual' && (
                 <TextField
                   size="small"
@@ -263,13 +250,13 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open = true, onClos
                   fullWidth
                 />
               )}
-              
+
               {locationError && (
                 <Alert severity="error" sx={{ py: 0.5 }}>
                   {locationError}
                 </Alert>
               )}
-              
+
               <Button
                 variant="contained"
                 color="primary"
@@ -287,33 +274,116 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open = true, onClos
     </>
   );
 
+  // Mobile: Bottom sheet with peek/full states
   if (isMobile) {
     return (
-      <Drawer
-        anchor="left"
+      <SwipeableDrawer
+        anchor="bottom"
         open={open}
         onClose={onClose}
+        onOpen={() => {}}
+        disableSwipeToOpen
         PaperProps={{
           sx: {
-            width: '85%',
-            maxWidth: 400,
-            height: '100vh',
-            display: 'flex',
-            flexDirection: 'column'
-          }
+            height: mobileExpanded ? '90vh' : 'auto',
+            maxHeight: '90vh',
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            pointerEvents: 'auto',
+            overflow: 'visible',
+          },
+        }}
+        ModalProps={{
+          keepMounted: true,
         }}
       >
-        <Box sx={{ padding: theme.spacing(2), height: '100%', display: 'flex', flexDirection: 'column' }}>
-          {content}
-        </Box>
-      </Drawer>
+        {/* Drag handle */}
+        <Box
+          sx={{
+            width: 32,
+            height: 4,
+            bgcolor: 'grey.300',
+            borderRadius: 2,
+            mx: 'auto',
+            mt: 1,
+            mb: 0.5,
+          }}
+        />
+
+        {!mobileExpanded ? (
+          // Peek state
+          <Box
+            onClick={() => setMobileExpanded(true)}
+            sx={{ px: 2, pb: 2, pt: 1, cursor: 'pointer', minHeight: 80 }}
+          >
+            {selectedLake && (
+              <>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6" color="primary">
+                    {selectedLake.properties.name}
+                  </Typography>
+                  <IconButton onClick={(e) => { e.stopPropagation(); onClose(); }} size="small">
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {selectedLake.properties.county}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  Tryck för att visa mer
+                </Typography>
+              </>
+            )}
+          </Box>
+        ) : (
+          // Full state
+          <Box sx={{ px: 2, pb: 2, pt: 1, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+              <IconButton onClick={() => setMobileExpanded(false)} size="small">
+                <CloseIcon />
+              </IconButton>
+            </Box>
+            <Box sx={{ flex: 1, overflow: 'auto' }}>
+              {fullContent}
+            </Box>
+          </Box>
+        )}
+      </SwipeableDrawer>
     );
   }
 
+  // Desktop: Floating slide-in panel
   return (
-    <StyledSidePanel>
-      {content}
-    </StyledSidePanel>
+    <Slide direction="right" in={open} mountOnEnter unmountOnExit>
+      <Paper
+        elevation={4}
+        sx={{
+          position: 'absolute',
+          top: 16,
+          left: 16,
+          bottom: 16,
+          width: 350,
+          borderRadius: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          pointerEvents: 'auto',
+          overflow: 'hidden',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        }}
+      >
+        {/* Close button */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1, pb: 0 }}>
+          <IconButton onClick={onClose} size="small" data-testid="side-panel-close">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        {/* Scrollable content */}
+        <Box sx={{ flex: 1, overflow: 'auto', px: 3, pb: 3 }}>
+          {fullContent}
+        </Box>
+      </Paper>
+    </Slide>
   );
 };
 

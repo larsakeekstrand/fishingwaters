@@ -122,7 +122,7 @@ export const PressureChart: React.FC<PressureChartProps> = ({ data, loading, err
       <Typography variant="h6" gutterBottom>
         Lufttrycksanalys
       </Typography>
-      <Box sx={{ height: 300 }}>
+      <Box sx={{ height: 250 }}>
         <Line data={chartData} options={options} />
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>

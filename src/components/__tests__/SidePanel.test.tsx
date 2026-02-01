@@ -26,13 +26,19 @@ describe('SidePanel', () => {
     }
   };
 
+  const mockOnClose = vi.fn();
+
+  beforeEach(() => {
+    mockOnClose.mockClear();
+  });
+
   it('displays default message when no lake is selected', () => {
-    render(<SidePanel selectedLake={null} />);
+    render(<SidePanel selectedLake={null} open={true} onClose={mockOnClose} />);
     expect(screen.getByText('Välj en sjö på kartan för att se mer information')).toBeInTheDocument();
   });
 
   it('displays lake information when a lake is selected', () => {
-    render(<SidePanel selectedLake={mockLake} />);
+    render(<SidePanel selectedLake={mockLake} open={true} onClose={mockOnClose} />);
 
     expect(screen.getByText('Test Lake')).toBeInTheDocument();
     expect(screen.getByText('10 m')).toBeInTheDocument();
@@ -44,8 +50,16 @@ describe('SidePanel', () => {
     expect(screen.getByText('2023')).toBeInTheDocument();
   });
 
+  it('calls onClose when close button is clicked', () => {
+    render(<SidePanel selectedLake={mockLake} open={true} onClose={mockOnClose} />);
+
+    const closeButton = screen.getByTestId('side-panel-close');
+    fireEvent.click(closeButton);
+
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
   describe('Directions functionality', () => {
-    // Mock window.open
     const mockWindowOpen = vi.fn();
     const originalOpen = window.open;
 
@@ -59,7 +73,7 @@ describe('SidePanel', () => {
     });
 
     it('displays directions section with toggle buttons', () => {
-      render(<SidePanel selectedLake={mockLake} />);
+      render(<SidePanel selectedLake={mockLake} open={true} onClose={mockOnClose} />);
 
       expect(screen.getByText('Vägbeskrivning')).toBeInTheDocument();
       expect(screen.getByText('Min position')).toBeInTheDocument();
@@ -68,27 +82,23 @@ describe('SidePanel', () => {
     });
 
     it('shows address input when manual location is selected', () => {
-      render(<SidePanel selectedLake={mockLake} />);
+      render(<SidePanel selectedLake={mockLake} open={true} onClose={mockOnClose} />);
 
-      // Initially, address input should not be visible
       expect(screen.queryByPlaceholderText('Skriv din adress...')).not.toBeInTheDocument();
 
-      // Click on manual address toggle
       fireEvent.click(screen.getByText('Ange adress'));
 
-      // Address input should now be visible
       expect(screen.getByPlaceholderText('Skriv din adress...')).toBeInTheDocument();
     });
 
     it('disables button when manual mode is selected but no address is entered', () => {
-      render(<SidePanel selectedLake={mockLake} />);
+      render(<SidePanel selectedLake={mockLake} open={true} onClose={mockOnClose} />);
 
       fireEvent.click(screen.getByText('Ange adress'));
 
       const button = screen.getByText('Få vägbeskrivning').closest('button');
       expect(button).toBeDisabled();
 
-      // Enter an address
       const input = screen.getByPlaceholderText('Skriv din adress...');
       fireEvent.change(input, { target: { value: 'Test Address' } });
 
@@ -96,19 +106,15 @@ describe('SidePanel', () => {
     });
 
     it('opens Google Maps with manual address', () => {
-      render(<SidePanel selectedLake={mockLake} />);
+      render(<SidePanel selectedLake={mockLake} open={true} onClose={mockOnClose} />);
 
-      // Switch to manual mode
       fireEvent.click(screen.getByText('Ange adress'));
 
-      // Enter address
       const input = screen.getByPlaceholderText('Skriv din adress...');
       fireEvent.change(input, { target: { value: 'Stockholm, Sweden' } });
 
-      // Click get directions
       fireEvent.click(screen.getByText('Få vägbeskrivning'));
 
-      // Check that window.open was called with correct URL
       expect(mockWindowOpen).toHaveBeenCalledWith(
         'https://www.google.com/maps/dir/Stockholm%2C%20Sweden/59.3293,18.0686',
         '_blank'
@@ -116,7 +122,7 @@ describe('SidePanel', () => {
     });
 
     it('handles Enter key press in address input', () => {
-      render(<SidePanel selectedLake={mockLake} />);
+      render(<SidePanel selectedLake={mockLake} open={true} onClose={mockOnClose} />);
 
       fireEvent.click(screen.getByText('Ange adress'));
 
@@ -128,7 +134,6 @@ describe('SidePanel', () => {
     });
 
     it('requests geolocation when using current position', async () => {
-      // Mock geolocation
       const mockGeolocation = {
         getCurrentPosition: vi.fn()
       };
@@ -137,13 +142,12 @@ describe('SidePanel', () => {
         writable: true
       });
 
-      render(<SidePanel selectedLake={mockLake} />);
+      render(<SidePanel selectedLake={mockLake} open={true} onClose={mockOnClose} />);
 
       fireEvent.click(screen.getByText('Få vägbeskrivning'));
 
       expect(mockGeolocation.getCurrentPosition).toHaveBeenCalled();
 
-      // Simulate successful geolocation
       const successCallback = mockGeolocation.getCurrentPosition.mock.calls[0][0];
       act(() => {
         successCallback({
@@ -171,11 +175,10 @@ describe('SidePanel', () => {
         writable: true
       });
 
-      render(<SidePanel selectedLake={mockLake} />);
+      render(<SidePanel selectedLake={mockLake} open={true} onClose={mockOnClose} />);
 
       fireEvent.click(screen.getByText('Få vägbeskrivning'));
 
-      // Simulate geolocation error
       const errorCallback = mockGeolocation.getCurrentPosition.mock.calls[0][1];
       act(() => {
         errorCallback({

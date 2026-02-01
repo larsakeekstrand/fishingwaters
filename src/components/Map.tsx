@@ -1,6 +1,6 @@
 import React, { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip, LayersControl, Marker, Popup } from 'react-leaflet';
-import { Map as LeafletMap, Icon } from 'leaflet';
+import { Map as LeafletMap, Icon, LatLngBounds, LatLng } from 'leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
 import { calculateDistance } from '../utils/geoUtils';
 import { BoatRampFeature } from '../types/BoatRampTypes';
@@ -17,6 +17,8 @@ interface MapProps {
 
 export interface MapRef {
   focusOnLake: (lake: GeoJsonFeature) => void;
+  fitToLakes: (lakes: GeoJsonFeature[]) => void;
+  ensureVisible: (lakes: GeoJsonFeature[]) => void;
 }
 
 const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake, onLakeSelect, radiusFilter, showBoatRamps = false }, ref) => {
@@ -60,6 +62,42 @@ const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake,
         mapRef.current.setView([lat, lng], 10, {
           animate: true,
           duration: 1
+        });
+      }
+    },
+    fitToLakes: (lakes: GeoJsonFeature[]) => {
+      if (mapRef.current && lakes.length > 0) {
+        const bounds = new LatLngBounds(
+          lakes.map(lake => {
+            const [lng, lat] = lake.geometry.coordinates;
+            return new LatLng(lat, lng);
+          })
+        );
+        mapRef.current.fitBounds(bounds.pad(0.1), {
+          animate: true,
+          duration: 1,
+          maxZoom: 12
+        });
+      }
+    },
+    ensureVisible: (lakes: GeoJsonFeature[]) => {
+      if (!mapRef.current || lakes.length === 0) return;
+      const viewBounds = mapRef.current.getBounds();
+      const anyVisible = lakes.some(lake => {
+        const [lng, lat] = lake.geometry.coordinates;
+        return viewBounds.contains(new LatLng(lat, lng));
+      });
+      if (!anyVisible) {
+        const bounds = new LatLngBounds(
+          lakes.map(lake => {
+            const [lng, lat] = lake.geometry.coordinates;
+            return new LatLng(lat, lng);
+          })
+        );
+        mapRef.current.fitBounds(bounds.pad(0.1), {
+          animate: true,
+          duration: 1,
+          maxZoom: 12
         });
       }
     }
@@ -132,7 +170,7 @@ const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake,
       zoomControl={true}
       ref={mapRef}
     >
-      <LayersControl position="bottomright">
+      <LayersControl position="topright">
         <LayersControl.BaseLayer checked name="OpenStreetMap">
           <TileLayer
             url={tileLayers.openStreetMap.url}

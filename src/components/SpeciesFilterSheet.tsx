@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Popover,
-  Paper,
+  SwipeableDrawer,
+  Box,
   Typography,
   Button,
   FormGroup,
@@ -9,24 +9,27 @@ import {
   Checkbox,
   Stack,
   Divider,
-  Box,
   TextField,
-  InputAdornment
+  InputAdornment,
+  IconButton
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import { GeoJsonFeature } from '../types/GeoJsonTypes';
 
-interface SpeciesFilterPopoverProps {
-  anchorEl: HTMLElement | null;
+interface SpeciesFilterSheetProps {
+  open: boolean;
   onClose: () => void;
+  onOpen: () => void;
   features: GeoJsonFeature[];
   onFilterChange: (selectedSpecies: Set<string>) => void;
   selectedSpecies: Set<string>;
 }
 
-const SpeciesFilterPopover: React.FC<SpeciesFilterPopoverProps> = ({
-  anchorEl,
+const SpeciesFilterSheet: React.FC<SpeciesFilterSheetProps> = ({
+  open,
   onClose,
+  onOpen,
   features,
   onFilterChange,
   selectedSpecies
@@ -36,10 +39,10 @@ const SpeciesFilterPopover: React.FC<SpeciesFilterPopoverProps> = ({
 
   useEffect(() => {
     const speciesSet = new Set<string>();
-    
+
     features.forEach(feature => {
       const species = feature.properties.catchedSpecies || feature.properties.fångadeArter;
-      
+
       if (species) {
         if (Array.isArray(species)) {
           species.forEach(s => speciesSet.add(s));
@@ -52,25 +55,24 @@ const SpeciesFilterPopover: React.FC<SpeciesFilterPopoverProps> = ({
         }
       }
     });
-    
+
     setUniqueSpecies(Array.from(speciesSet).sort());
   }, [features]);
 
   const handleCheckboxChange = (species: string, checked: boolean) => {
     const newSelectedSpecies = new Set(selectedSpecies);
-    
+
     if (checked) {
       newSelectedSpecies.add(species);
     } else {
       newSelectedSpecies.delete(species);
     }
-    
+
     onFilterChange(newSelectedSpecies);
   };
 
   const handleSelectAll = () => {
-    const allSpecies = new Set(uniqueSpecies);
-    onFilterChange(allSpecies);
+    onFilterChange(new Set(uniqueSpecies));
   };
 
   const handleClearAll = () => {
@@ -82,28 +84,47 @@ const SpeciesFilterPopover: React.FC<SpeciesFilterPopoverProps> = ({
   );
 
   return (
-    <Popover
-      open={Boolean(anchorEl)}
-      anchorEl={anchorEl}
+    <SwipeableDrawer
+      anchor="bottom"
+      open={open}
       onClose={onClose}
-      anchorOrigin={{
-        vertical: 'center',
-        horizontal: 'left',
-      }}
-      transformOrigin={{
-        vertical: 'center',
-        horizontal: 'right',
-      }}
+      onOpen={onOpen}
+      disableSwipeToOpen
       PaperProps={{
-        sx: { width: 340, maxHeight: 500, borderRadius: '12px' }
+        sx: {
+          height: '85vh',
+          borderTopLeftRadius: 16,
+          borderTopRightRadius: 16,
+          overflow: 'visible',
+        },
       }}
     >
-      <Paper sx={{ p: 2 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Filtrera efter arter
-        </Typography>
-        
-        <Stack spacing={2}>
+      {/* Drag handle */}
+      <Box
+        sx={{
+          width: 32,
+          height: 4,
+          bgcolor: 'grey.300',
+          borderRadius: 2,
+          mx: 'auto',
+          mt: 1,
+          mb: 0.5,
+        }}
+      />
+
+      <Box sx={{ px: 2, pb: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1 }}>
+          <Typography variant="subtitle1">
+            Filtrera efter arter
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        <Stack spacing={2} sx={{ flex: 1, overflow: 'hidden' }}>
+          {/* Search */}
           <TextField
             size="small"
             placeholder="Sök arter..."
@@ -117,37 +138,24 @@ const SpeciesFilterPopover: React.FC<SpeciesFilterPopoverProps> = ({
                     <SearchIcon fontSize="small" />
                   </InputAdornment>
                 ),
-              }
+              },
             }}
           />
-          
+
+          {/* Select all / Clear all */}
           <Stack direction="row" spacing={1}>
-            <Button 
-              size="small" 
-              variant="outlined" 
-              onClick={handleSelectAll}
-              fullWidth
-            >
+            <Button size="small" variant="outlined" onClick={handleSelectAll} fullWidth>
               Välj alla
             </Button>
-            <Button 
-              size="small" 
-              variant="outlined" 
-              onClick={handleClearAll}
-              fullWidth
-              color="secondary"
-            >
+            <Button size="small" variant="outlined" onClick={handleClearAll} fullWidth color="secondary">
               Rensa alla
             </Button>
           </Stack>
-          
+
           <Divider />
-          
-          <Box sx={{ 
-            maxHeight: 300, 
-            overflow: 'auto',
-            pr: 1
-          }}>
+
+          {/* Scrollable checkbox list */}
+          <Box sx={{ flex: 1, overflow: 'auto', pr: 1 }}>
             <FormGroup>
               {filteredSpecies.length === 0 ? (
                 <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
@@ -161,39 +169,28 @@ const SpeciesFilterPopover: React.FC<SpeciesFilterPopoverProps> = ({
                       <Checkbox
                         checked={selectedSpecies.has(species)}
                         onChange={(e) => handleCheckboxChange(species, e.target.checked)}
-                        size="small"
+                        size="medium"
                         color="primary"
                       />
                     }
-                    label={
-                      <Typography variant="body2">{species}</Typography>
-                    }
-                    sx={{ mb: 0.5 }}
+                    label={species}
+                    sx={{ py: 0.5 }}
                   />
                 ))
               )}
             </FormGroup>
           </Box>
-          
-          <Box sx={{ 
-            pt: 1, 
-            borderTop: 1, 
-            borderColor: 'divider',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
+
+          {/* Footer count */}
+          <Box sx={{ pt: 1, borderTop: 1, borderColor: 'divider' }}>
             <Typography variant="caption" color="text.secondary">
               {selectedSpecies.size} av {uniqueSpecies.length} valda
             </Typography>
-            <Button size="small" onClick={onClose}>
-              Stäng
-            </Button>
           </Box>
         </Stack>
-      </Paper>
-    </Popover>
+      </Box>
+    </SwipeableDrawer>
   );
 };
 
-export default SpeciesFilterPopover;
+export default SpeciesFilterSheet;

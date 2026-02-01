@@ -1,36 +1,56 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { 
-  ThemeProvider, 
-  createTheme, 
+import {
+  ThemeProvider,
+  createTheme,
   CssBaseline,
   Box,
-  Typography,
-  useMediaQuery,
-  useTheme as useMuiTheme
+  Typography
 } from '@mui/material';
 import Map, { MapRef } from './components/Map';
 import SidePanel from './components/SidePanel';
-import AppHeader from './components/AppHeader';
-import MobileControlPanel from './components/MobileControlPanel';
+import FloatingSearchBar from './components/FloatingSearchBar';
+import FloatingActionButtons from './components/FloatingActionButtons';
 import { GeoJsonCollection, GeoJsonFeature } from './types/GeoJsonTypes';
 import { mergeGeoJsonCollections, removeBOM, convertLakeDataToGeoJson } from './utils/DataLoader';
+import { calculateDistance } from './utils/geoUtils';
 
 export const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, '') || '/fishingwaters';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#2196f3', // Blue color for water theme
+      main: '#1976d2',
     },
     secondary: {
-      main: '#4caf50', // Green for nature theme
+      main: '#4caf50',
     },
     background: {
       default: '#f5f5f5',
     },
   },
+  shape: {
+    borderRadius: 12,
+  },
   typography: {
     fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif',
+    fontSize: 14,
+  },
+  components: {
+    MuiFab: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+        },
+      },
+    },
   },
 });
 
@@ -40,13 +60,10 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [filteredSpecies, setFilteredSpecies] = useState<Set<string>>(new Set());
   const [selectedLake, setSelectedLake] = useState<GeoJsonFeature | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
-  const [mobileControlsOpen, setMobileControlsOpen] = useState<boolean>(false);
+  const [sidePanelOpen, setSidePanelOpen] = useState<boolean>(false);
   const [radiusFilter, setRadiusFilter] = useState<{userLat: number, userLon: number, radius: number} | null>(null);
   const [showBoatRamps, setShowBoatRamps] = useState<boolean>(false);
-  
-  const muiTheme = useMuiTheme();
-  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
+
   const mapRef = useRef<MapRef>(null);
 
   useEffect(() => {
@@ -56,20 +73,14 @@ function App() {
   const fetchAllLakeData = async () => {
     try {
       setIsLoading(true);
-      
-      // First, fetch the list of files from the data directory index
+
       const indexResponse = await fetch(`${BASE_PATH}/data/index.json`);
-      
 
       let fileList: string[] = [];
-      
-      // If index.json exists, use it to get the list of files
+
       if (indexResponse.ok) {
         try {
-          // Store the response text first
           const responseText = await indexResponse.text();
-          
-          // Then parse it as JSON
           const indexData = JSON.parse(responseText);
           fileList = indexData.files || [];
         } catch (jsonError) {
@@ -81,24 +92,19 @@ function App() {
         console.error('Failed to fetch index.json:', indexResponse.status, errorText);
         setError(`Failed to load index.json (${indexResponse.status})`);
       }
-      
-      // Then fetch each file and merge the data
+
       const collections: GeoJsonCollection[] = [];
-      
+
       for (const fileName of fileList) {
         if (fileName.endsWith('.json')) {
           try {
             const response = await fetch(`${BASE_PATH}/data/${fileName}`);
             if (response.ok) {
               let text = await response.text();
-              
-              // Remove BOM if present
               text = removeBOM(text);
-              
               const jsonData = JSON.parse(text);
-              
+
              if (Array.isArray(jsonData)) {
-                // Convert raw lake data array to GeoJSON format
                 try {
                   const convertedData = convertLakeDataToGeoJson(jsonData);
                   collections.push(convertedData);
@@ -112,12 +118,9 @@ function App() {
           }
         }
       }
-      
-      // Merge all collections into one
+
       const mergedData = mergeGeoJsonCollections(collections);
-      
       setData(mergedData);
-      
       setIsLoading(false);
     } catch (err) {
       console.error('Error fetching lake data:', err);
@@ -128,38 +131,68 @@ function App() {
 
   const handleFilterChange = (selectedSpecies: Set<string>) => {
     setFilteredSpecies(selectedSpecies);
-  };
-  
-  const handleLakeSelect = (lake: GeoJsonFeature) => {
-    setSelectedLake(lake);
-    if (isMobile) {
-      setDrawerOpen(true);
+
+    if (selectedSpecies.size > 0) {
+      const matchingLakes = data.features.filter(feature => {
+        const hasAny = (species: string[] | string | undefined): boolean => {
+          if (!species) return false;
+          if (Array.isArray(species)) return species.some(s => selectedSpecies.has(s));
+          if (typeof species === 'string') {
+            if (species.includes(',')) return species.split(',').map(s => s.trim()).some(s => selectedSpecies.has(s));
+            return selectedSpecies.has(species);
+          }
+          return false;
+        };
+        return hasAny(feature.properties.catchedSpecies) || hasAny(feature.properties.fångadeArter);
+      });
+      mapRef.current?.ensureVisible(matchingLakes);
     }
   };
-  
+
+  const handleLakeSelect = (lake: GeoJsonFeature) => {
+    setSelectedLake(lake);
+    setSidePanelOpen(true);
+  };
+
   const handleSearchSelect = (lake: GeoJsonFeature) => {
     setSelectedLake(lake);
     mapRef.current?.focusOnLake(lake);
-    if (isMobile) {
-      setDrawerOpen(true);
-    }
+    setSidePanelOpen(true);
   };
 
   const handleRadiusSearch = (userLat: number, userLon: number, radius: number) => {
     setRadiusFilter({ userLat, userLon, radius });
-    // Clear other filters to focus on radius results
     setFilteredSpecies(new Set());
     setSelectedLake(null);
+
+    const lakesInRadius = data.features.filter(feature => {
+      const [lng, lat] = feature.geometry.coordinates;
+      return calculateDistance(userLat, userLon, lat, lng) <= radius;
+    });
+    mapRef.current?.fitToLakes(lakesInRadius);
   };
+
+  const handleSidePanelClose = () => {
+    setSidePanelOpen(false);
+  };
+
+  const handleReset = () => {
+    setSelectedLake(null);
+    setSidePanelOpen(false);
+    setFilteredSpecies(new Set());
+    setRadiusFilter(null);
+  };
+
+  const hasActiveFilters = selectedLake !== null || filteredSpecies.size > 0 || radiusFilter !== null;
 
   if (isLoading) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          alignItems="center" 
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
           minHeight="100vh"
           bgcolor="background.default"
         >
@@ -175,10 +208,10 @@ function App() {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          alignItems="center" 
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
           minHeight="100vh"
           bgcolor="background.default"
         >
@@ -193,77 +226,42 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-        {/* Header */}
-        <AppHeader
+      {/* Full-viewport map */}
+      <Box sx={{ position: 'fixed', inset: 0 }}>
+        <Map
+          ref={mapRef}
+          data={data}
+          filteredSpecies={filteredSpecies}
+          selectedLake={selectedLake}
+          onLakeSelect={handleLakeSelect}
+          radiusFilter={radiusFilter}
+          showBoatRamps={showBoatRamps}
+        />
+      </Box>
+
+      {/* Overlay container for floating elements */}
+      <Box sx={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1000 }}>
+        <FloatingSearchBar
           lakes={data.features}
-          features={data.features}
           onLakeSelect={handleSearchSelect}
+        />
+
+        <FloatingActionButtons
+          features={data.features}
           onFilterChange={handleFilterChange}
+          selectedSpecies={filteredSpecies}
           onRadiusSearch={handleRadiusSearch}
           showBoatRamps={showBoatRamps}
           onBoatRampsToggle={setShowBoatRamps}
-          onMobileMenuOpen={() => setMobileControlsOpen(true)}
-          selectedSpeciesCount={filteredSpecies.size}
-          selectedSpecies={filteredSpecies}
+          onReset={handleReset}
+          hasActiveFilters={hasActiveFilters}
         />
-        
-        {/* Main Content Area */}
-        <Box sx={{ 
-          display: 'flex', 
-          width: '100%',
-          mt: isMobile ? 7 : 8, // Account for header height (56px = 7 * 8px, 64px = 8 * 8px)
-          position: 'relative'
-        }}>
-          {/* Side Panel - Desktop */}
-          {!isMobile && (
-            <Box sx={{ 
-              width: 300, 
-              flexShrink: 0,
-              height: `calc(100vh - ${isMobile ? 56 : 64}px)`,
-              overflow: 'hidden'
-            }}>
-              <SidePanel selectedLake={selectedLake} />
-            </Box>
-          )}
-          
-          {/* Map */}
-          <Box sx={{ flexGrow: 1, position: 'relative', height: `calc(100vh - ${isMobile ? 56 : 64}px)` }}>
-            <Map
-              ref={mapRef}
-              data={data}
-              filteredSpecies={filteredSpecies}
-              selectedLake={selectedLake}
-              onLakeSelect={handleLakeSelect}
-              radiusFilter={radiusFilter}
-              showBoatRamps={showBoatRamps}
-            />
-          </Box>
-        </Box>
-        
-        {/* Mobile Controls */}
-        {isMobile && (
-          <>
-            <MobileControlPanel
-              open={mobileControlsOpen}
-              onClose={() => setMobileControlsOpen(false)}
-              onOpen={() => setMobileControlsOpen(true)}
-              features={data.features}
-              onFilterChange={handleFilterChange}
-              selectedSpecies={filteredSpecies}
-              showBoatRamps={showBoatRamps}
-              onBoatRampsToggle={setShowBoatRamps}
-              onRadiusSearch={handleRadiusSearch}
-            />
-            
-            {/* Mobile Side Panel for Lake Details */}
-            <SidePanel 
-              selectedLake={selectedLake} 
-              open={drawerOpen}
-              onClose={() => setDrawerOpen(false)}
-            />
-          </>
-        )}
+
+        <SidePanel
+          selectedLake={selectedLake}
+          open={sidePanelOpen}
+          onClose={handleSidePanelClose}
+        />
       </Box>
     </ThemeProvider>
   );
