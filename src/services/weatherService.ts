@@ -1,9 +1,11 @@
-interface WeatherData {
+export interface WeatherData {
   time: string;
   pressure: number;
+  windSpeed?: number;
+  temperature?: number;
 }
 
-interface PressureData {
+export interface WeatherResult {
   historical: WeatherData[];
   forecast: WeatherData[];
 }
@@ -12,31 +14,30 @@ const WEATHER_API_BASE_URL = 'https://api.met.no/weatherapi/locationforecast/2.0
 const HISTORICAL_API_BASE_URL = 'https://archive-api.open-meteo.com/v1/archive';
 
 export class WeatherService {
-  private static cache = new Map<string, { data: PressureData; timestamp: number }>();
+  private static cache = new Map<string, { data: WeatherResult; timestamp: number }>();
   private static CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
-  static async fetchPressureData(lat: number, lon: number): Promise<PressureData> {
+  static async fetchWeatherData(lat: number, lon: number): Promise<WeatherResult> {
     const cacheKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
     const cached = this.cache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
       return cached.data;
     }
 
     try {
-      // Fetch historical data from Open-Meteo and forecast from met.no in parallel
       const [historicalResponse, forecastResponse] = await Promise.all([
         this.fetchHistoricalData(lat, lon),
         this.fetchForecastData(lat, lon)
       ]);
 
-      const pressureData = {
+      const weatherData: WeatherResult = {
         historical: historicalResponse,
         forecast: forecastResponse
       };
-      
-      this.cache.set(cacheKey, { data: pressureData, timestamp: Date.now() });
-      return pressureData;
+
+      this.cache.set(cacheKey, { data: weatherData, timestamp: Date.now() });
+      return weatherData;
     } catch (error) {
       console.error('Error fetching weather data:', error);
       throw error;
@@ -46,16 +47,16 @@ export class WeatherService {
   private static async fetchHistoricalData(lat: number, lon: number): Promise<WeatherData[]> {
     const now = new Date();
     const endDate = new Date(now);
-    endDate.setDate(endDate.getDate() - 2); // Go back 2 days to avoid incomplete data
-    
+    endDate.setDate(endDate.getDate() - 2);
+
     const startDate = new Date(endDate);
-    startDate.setDate(startDate.getDate() - 5); // Get 5 days of history
+    startDate.setDate(startDate.getDate() - 5);
 
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
     const response = await fetch(
-      `${HISTORICAL_API_BASE_URL}?latitude=${lat}&longitude=${lon}&start_date=${startDateStr}&end_date=${endDateStr}&hourly=pressure_msl`
+      `${HISTORICAL_API_BASE_URL}?latitude=${lat}&longitude=${lon}&start_date=${startDateStr}&end_date=${endDateStr}&hourly=pressure_msl,temperature_2m,wind_speed_10m`
     );
 
     if (!response.ok) {
@@ -88,23 +89,45 @@ export class WeatherService {
   private static processHistoricalData(openMeteoData: any): WeatherData[] {
     const times = openMeteoData.hourly?.time || [];
     const pressures = openMeteoData.hourly?.pressure_msl || [];
+    const temperatures = openMeteoData.hourly?.temperature_2m || [];
+    const windSpeeds = openMeteoData.hourly?.wind_speed_10m || [];
 
-    const dailyAverages = new Map<string, { sum: number; count: number }>();
+    const dailyAverages = new Map<string, {
+      pressureSum: number; pressureCount: number;
+      tempSum: number; tempCount: number;
+      windSum: number; windCount: number;
+    }>();
 
     for (let i = 0; i < times.length; i++) {
-      if (pressures[i] !== null && pressures[i] !== undefined) {
-        const date = times[i].split('T')[0];
-        const existing = dailyAverages.get(date) || { sum: 0, count: 0 };
-        existing.sum += pressures[i];
-        existing.count += 1;
-        dailyAverages.set(date, existing);
+      const date = times[i].split('T')[0];
+      const existing = dailyAverages.get(date) || {
+        pressureSum: 0, pressureCount: 0,
+        tempSum: 0, tempCount: 0,
+        windSum: 0, windCount: 0,
+      };
+
+      if (pressures[i] != null) {
+        existing.pressureSum += pressures[i];
+        existing.pressureCount += 1;
       }
+      if (temperatures[i] != null) {
+        existing.tempSum += temperatures[i];
+        existing.tempCount += 1;
+      }
+      if (windSpeeds[i] != null) {
+        existing.windSum += windSpeeds[i];
+        existing.windCount += 1;
+      }
+
+      dailyAverages.set(date, existing);
     }
 
     return Array.from(dailyAverages.entries())
-      .map(([date, { sum, count }]) => ({
+      .map(([date, d]) => ({
         time: `${date}T12:00:00Z`,
-        pressure: Math.round((sum / count) * 10) / 10,
+        pressure: d.pressureCount > 0 ? Math.round((d.pressureSum / d.pressureCount) * 10) / 10 : 0,
+        temperature: d.tempCount > 0 ? Math.round((d.tempSum / d.tempCount) * 10) / 10 : undefined,
+        windSpeed: d.windCount > 0 ? Math.round((d.windSum / d.windCount) * 10) / 10 : undefined,
       }))
       .sort((a, b) => a.time.localeCompare(b.time));
   }
@@ -119,9 +142,12 @@ export class WeatherService {
     for (const entry of timeseries) {
       const entryDate = new Date(entry.time);
       if (entryDate <= endDate && entry.data?.instant?.details?.air_pressure_at_sea_level) {
+        const details = entry.data.instant.details;
         forecast.push({
           time: entry.time,
-          pressure: entry.data.instant.details.air_pressure_at_sea_level,
+          pressure: details.air_pressure_at_sea_level,
+          windSpeed: details.wind_speed ?? undefined,
+          temperature: details.air_temperature ?? undefined,
         });
       }
     }
@@ -130,19 +156,39 @@ export class WeatherService {
   }
 
   private static aggregateToDailyAverages(hourlyData: WeatherData[]): WeatherData[] {
-    const dailyMap = new Map<string, { sum: number; count: number }>();
+    const dailyMap = new Map<string, {
+      pressureSum: number; pressureCount: number;
+      tempSum: number; tempCount: number;
+      windSum: number; windCount: number;
+    }>();
 
     for (const entry of hourlyData) {
       const date = entry.time.split('T')[0];
-      const existing = dailyMap.get(date) || { sum: 0, count: 0 };
-      existing.sum += entry.pressure;
-      existing.count += 1;
+      const existing = dailyMap.get(date) || {
+        pressureSum: 0, pressureCount: 0,
+        tempSum: 0, tempCount: 0,
+        windSum: 0, windCount: 0,
+      };
+
+      existing.pressureSum += entry.pressure;
+      existing.pressureCount += 1;
+      if (entry.temperature != null) {
+        existing.tempSum += entry.temperature;
+        existing.tempCount += 1;
+      }
+      if (entry.windSpeed != null) {
+        existing.windSum += entry.windSpeed;
+        existing.windCount += 1;
+      }
+
       dailyMap.set(date, existing);
     }
 
-    return Array.from(dailyMap.entries()).map(([date, { sum, count }]) => ({
+    return Array.from(dailyMap.entries()).map(([date, d]) => ({
       time: `${date}T12:00:00Z`,
-      pressure: Math.round((sum / count) * 10) / 10,
+      pressure: Math.round((d.pressureSum / d.pressureCount) * 10) / 10,
+      temperature: d.tempCount > 0 ? Math.round((d.tempSum / d.tempCount) * 10) / 10 : undefined,
+      windSpeed: d.windCount > 0 ? Math.round((d.windSum / d.windCount) * 10) / 10 : undefined,
     }));
   }
 }

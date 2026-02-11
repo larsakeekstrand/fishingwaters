@@ -26,8 +26,8 @@ import MyLocationIcon from '@mui/icons-material/MyLocation';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import CloseIcon from '@mui/icons-material/Close';
-import { PressureChart } from './PressureChart';
-import { WeatherService } from '../services/weatherService';
+import { FishingForecast } from './FishingForecast';
+import { WeatherService, WeatherResult } from '../services/weatherService';
 
 interface SidePanelProps {
   selectedLake: GeoJsonFeature | null;
@@ -54,25 +54,25 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open, onClose }) =>
   const [manualAddress, setManualAddress] = useState('');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [pressureData, setPressureData] = useState<any>(null);
-  const [pressureLoading, setPressureLoading] = useState(false);
-  const [pressureError, setPressureError] = useState<string | null>(null);
+  const [weatherData, setWeatherData] = useState<WeatherResult | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState(false);
 
   useEffect(() => {
     if (selectedLake) {
       const [lng, lat] = selectedLake.geometry.coordinates;
-      setPressureLoading(true);
-      setPressureError(null);
+      setWeatherLoading(true);
+      setWeatherError(null);
 
-      WeatherService.fetchPressureData(lat, lng)
+      WeatherService.fetchWeatherData(lat, lng)
         .then(data => {
-          setPressureData(data);
-          setPressureLoading(false);
+          setWeatherData(data);
+          setWeatherLoading(false);
         })
         .catch(() => {
-          setPressureError('Kunde inte hämta väderdata');
-          setPressureLoading(false);
+          setWeatherError('Kunde inte hämta väderdata');
+          setWeatherLoading(false);
         });
     }
   }, [selectedLake]);
@@ -205,10 +205,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ selectedLake, open, onClose }) =>
 
             <Divider sx={{ my: 2 }} />
 
-            <PressureChart
-              data={pressureData}
-              loading={pressureLoading}
-              error={pressureError}
+            <FishingForecast
+              data={weatherData}
+              loading={weatherLoading}
+              error={weatherError}
             />
           </ContentSection>
 
