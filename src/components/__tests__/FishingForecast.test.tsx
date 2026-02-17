@@ -7,21 +7,27 @@ vi.mock('react-chartjs-2', () => ({
   Line: () => null,
 }));
 
+function daysFromNow(offset: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return `${d.toISOString().split('T')[0]}T12:00:00Z`;
+}
+
 describe('FishingForecast', () => {
   const mockData = {
     historical: [
-      { time: '2025-07-17T12:00:00Z', pressure: 1013.2, windSpeed: 3, temperature: 15 },
-      { time: '2025-07-18T12:00:00Z', pressure: 1014.1, windSpeed: 2, temperature: 16 },
-      { time: '2025-07-19T12:00:00Z', pressure: 1015.0, windSpeed: 4, temperature: 14 },
-      { time: '2025-07-20T12:00:00Z', pressure: 1014.5, windSpeed: 3, temperature: 17 },
-      { time: '2025-07-21T12:00:00Z', pressure: 1013.8, windSpeed: 2, temperature: 18 },
+      { time: daysFromNow(-5), pressure: 1013.2, windSpeed: 3, temperature: 15 },
+      { time: daysFromNow(-4), pressure: 1014.1, windSpeed: 2, temperature: 16 },
+      { time: daysFromNow(-3), pressure: 1015.0, windSpeed: 4, temperature: 14 },
+      { time: daysFromNow(-2), pressure: 1014.5, windSpeed: 3, temperature: 17 },
+      { time: daysFromNow(-1), pressure: 1013.8, windSpeed: 2, temperature: 18 },
     ],
     forecast: [
-      { time: '2025-07-22T12:00:00Z', pressure: 1013.5, windSpeed: 5, temperature: 16 },
-      { time: '2025-07-23T12:00:00Z', pressure: 1014.2, windSpeed: 3, temperature: 15 },
-      { time: '2025-07-24T12:00:00Z', pressure: 1015.1, windSpeed: 2, temperature: 14 },
-      { time: '2025-07-25T12:00:00Z', pressure: 1015.5, windSpeed: 1, temperature: 13 },
-      { time: '2025-07-26T12:00:00Z', pressure: 1014.8, windSpeed: 4, temperature: 16 },
+      { time: daysFromNow(0), pressure: 1013.5, windSpeed: 5, temperature: 16 },
+      { time: daysFromNow(1), pressure: 1014.2, windSpeed: 3, temperature: 15 },
+      { time: daysFromNow(2), pressure: 1015.1, windSpeed: 2, temperature: 14 },
+      { time: daysFromNow(3), pressure: 1015.5, windSpeed: 1, temperature: 13 },
+      { time: daysFromNow(4), pressure: 1014.8, windSpeed: 4, temperature: 16 },
     ],
   };
 
@@ -42,10 +48,10 @@ describe('FishingForecast', () => {
     expect(screen.getByText(/Historisk: Open-Meteo/)).toBeInTheDocument();
   });
 
-  it('should render star ratings for each day', () => {
+  it('should render star ratings only for today and future days', () => {
     render(<FishingForecast data={mockData} loading={false} error={null} />);
     const ratings = screen.getAllByRole('img');
-    expect(ratings.length).toBe(10); // 10 days of ratings
+    expect(ratings.length).toBe(5);
   });
 
   it('should return null when no data and not loading', () => {

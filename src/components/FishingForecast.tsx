@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,7 +11,11 @@ import {
   ChartOptions,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { Box, Typography, CircularProgress, Alert, Rating, Tooltip } from '@mui/material';
+import {
+  Box, Typography, CircularProgress, Alert, Rating, Tooltip,
+  IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button,
+} from '@mui/material';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { WeatherResult } from '../services/weatherService';
 import { calculateFishingScores, DailyFishingScore } from '../utils/fishingScoreCalculator';
 
@@ -32,15 +36,22 @@ interface FishingForecastProps {
 }
 
 export const FishingForecast: React.FC<FishingForecastProps> = ({ data, loading, error }) => {
-  const scores = useMemo(() => {
+  const [infoOpen, setInfoOpen] = useState(false);
+
+  const allScores = useMemo(() => {
     if (!data) return [];
     return calculateFishingScores(data.historical, data.forecast);
   }, [data]);
 
+  const forecastScores = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return allScores.filter(s => s.date >= today);
+  }, [allScores]);
+
   const bestDayIndex = useMemo(() => {
-    if (scores.length === 0) return -1;
-    return scores.reduce((best, s, i) => s.rawScore > scores[best].rawScore ? i : best, 0);
-  }, [scores]);
+    if (forecastScores.length === 0) return -1;
+    return forecastScores.reduce((best, s, i) => s.rawScore > forecastScores[best].rawScore ? i : best, 0);
+  }, [forecastScores]);
 
   if (loading) {
     return (
@@ -143,9 +154,49 @@ export const FishingForecast: React.FC<FishingForecastProps> = ({ data, loading,
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        Fiskeprognos
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+        <Typography variant="h6">
+          Fiskeprognos
+        </Typography>
+        <IconButton size="small" onClick={() => setInfoOpen(true)} aria-label="Visa beräkningsinfo">
+          <InfoOutlinedIcon fontSize="small" />
+        </IconButton>
+      </Box>
+
+      <Dialog open={infoOpen} onClose={() => setInfoOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Så beräknas fiskeprognosen</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" paragraph>
+            Varje dag får 1-5 stjärnor baserat på fyra faktorer:
+          </Typography>
+          <Typography variant="body2" component="div">
+            <strong>Trycktrend (40%)</strong>
+            <br />
+            Stabilt eller långsamt stigande tryck ger bäst poäng. Snabba tryckfall sänker betyget.
+          </Typography>
+          <Typography variant="body2" component="div" sx={{ mt: 1 }}>
+            <strong>Vindhastighet (25%)</strong>
+            <br />
+            Lätt vind (1-4 m/s) är idealiskt. Över 10 m/s ger lågt betyg.
+          </Typography>
+          <Typography variant="body2" component="div" sx={{ mt: 1 }}>
+            <strong>Månfas (20%)</strong>
+            <br />
+            Nymåne och fullmåne anses ge bäst fiske. Kvartmåne ger lägst poäng.
+          </Typography>
+          <Typography variant="body2" component="div" sx={{ mt: 1 }}>
+            <strong>Temperatur (15%)</strong>
+            <br />
+            10-20°C är idealiskt för svenskt sötvattensfiske. Extrema temperaturer sänker betyget.
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 2 }} color="text.secondary">
+            Tryck för på en dag för att se detaljerad poäng per faktor.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInfoOpen(false)}>Stäng</Button>
+        </DialogActions>
+      </Dialog>
 
       <Box
         sx={{
@@ -156,7 +207,7 @@ export const FishingForecast: React.FC<FishingForecastProps> = ({ data, loading,
           gap: 0.5,
         }}
       >
-        {scores.map((score, index) => (
+        {forecastScores.map((score, index) => (
           <Tooltip
             key={score.date}
             title={
