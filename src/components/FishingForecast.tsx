@@ -201,9 +201,8 @@ export const FishingForecast: React.FC<FishingForecastProps> = ({ data, loading,
       <Box
         sx={{
           display: 'flex',
-          justifyContent: 'space-around',
+          flexDirection: 'column',
           mb: 2,
-          overflowX: 'auto',
           gap: 0.5,
         }}
       >
@@ -220,22 +219,19 @@ export const FishingForecast: React.FC<FishingForecastProps> = ({ data, loading,
             <Box
               sx={{
                 display: 'flex',
-                flexDirection: 'column',
+                flexDirection: 'row',
                 alignItems: 'center',
-                px: 0.5,
-                py: 0.5,
+                justifyContent: 'space-between',
+                px: 1.5,
+                py: 0.75,
                 borderRadius: 1,
-                minWidth: 48,
                 ...(index === bestDayIndex && {
                   bgcolor: 'rgba(255, 193, 7, 0.15)',
                 }),
               }}
             >
               <Typography variant="caption" sx={{ fontWeight: index === bestDayIndex ? 700 : 400 }}>
-                {formatDayName(score.date + 'T12:00:00Z')}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                {formatDate(score.date + 'T12:00:00Z')}
+                {formatDayName(score.date + 'T12:00:00Z')} {formatDate(score.date + 'T12:00:00Z')}
               </Typography>
               <Rating
                 value={score.stars}
