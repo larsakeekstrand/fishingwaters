@@ -17,6 +17,7 @@ vi.mock('react-leaflet', () => ({
   Tooltip: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="tooltip">{children}</div>
   ),
+  ZoomControl: () => <div data-testid="zoom-control" />,
   LayersControl: Object.assign(
     ({ children }: { children: React.ReactNode }) => (
       <div data-testid="layers-control">{children}</div>

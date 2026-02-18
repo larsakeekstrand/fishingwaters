@@ -1,5 +1,5 @@
 import React, { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Tooltip, LayersControl, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Tooltip, LayersControl, Marker, Popup, ZoomControl } from 'react-leaflet';
 import { Map as LeafletMap, Icon, LatLngBounds, LatLng } from 'leaflet';
 import { GeoJsonCollection, GeoJsonFeature } from '../types/GeoJsonTypes';
 import { calculateDistance } from '../utils/geoUtils';
@@ -167,10 +167,11 @@ const Map = forwardRef<MapRef, MapProps>(({ data, filteredSpecies, selectedLake,
       touchZoom={true}
       doubleClickZoom={true}
       scrollWheelZoom={true}
-      zoomControl={true}
+      zoomControl={false}
       ref={mapRef}
     >
-      <LayersControl position="topright">
+      <ZoomControl position="bottomleft" />
+      <LayersControl position="bottomright">
         <LayersControl.BaseLayer checked name="OpenStreetMap">
           <TileLayer
             url={tileLayers.openStreetMap.url}

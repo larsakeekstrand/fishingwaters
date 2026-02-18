@@ -1,56 +1,43 @@
-# CLAUDE.md - FishingWaters Project Guide
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
-- Build: `npm start` (dev), `npm run build` (production)
-- Deploy: `npm run deploy` (builds and deploys to GitHub Pages)
-- Test: `npm test` (unit tests)
-- E2E: `npm run cypress` (interactive), `npm run cypress:run` (headless)
-- Acceptance: `npm run test:acceptance` (against production at https://larsakeekstrand.github.io/fishingwaters)
+- Dev server: `npm start` (port 3000, serves at /fishingwaters/)
+- Build: `npm run build` (output to /build/)
+- Deploy: `npm run deploy` (builds + deploys to GitHub Pages)
+- Unit tests: `npm test` (Vitest, all tests)
+- Single test: `npx vitest run src/path/to/test.ts`
+- Watch mode: `npm run test:watch`
+- E2E interactive: `npm run cypress` (requires dev server running)
+- E2E headless: `npm run cypress:run` (requires dev server running)
+- Acceptance: `npm run test:acceptance` (runs Cypress against production)
+
+## Architecture
+
+React + TypeScript SPA for exploring Swedish fishing waters on an interactive map. Deployed to GitHub Pages at `/fishingwaters/`.
+
+**Data flow:** App.tsx fetches `/data/index.json` → loads regional JSON files → converts SWEREF99 coordinates to WGS84 via proj4 → merges into a single GeoJsonCollection → passes to Map and search components.
+
+**Key data types:** `GeoJsonFeature` and `GeoJsonCollection` in `src/types/GeoJsonTypes.ts`. Lake properties have dual Swedish/English names (e.g., `catchedSpecies` / `fångadeArter`).
+
+**Component layout:** Full-viewport Leaflet map with floating overlay elements (search bar, action buttons, side panel). The overlay container uses `pointerEvents: 'none'` with individual interactive elements re-enabling pointer events.
+
+**Weather integration:** `WeatherService` combines two APIs — Open-Meteo archive for historical data and api.met.no for forecasts. Both are aggregated to daily averages. Results are cached for 10 minutes.
+
+**Fishing forecast:** `fishingScoreCalculator.ts` computes a weighted score (pressure trend 40%, wind 25%, moon phase 20%, temperature 15%) and maps to 1-5 stars. Moon phase calculation in `moonPhase.ts` uses synodic month from a known new moon epoch.
+
+**Coordinate system:** Raw data uses SWEREF99 TM (Swedish national grid). `coordinateConverter.ts` uses proj4 to convert to WGS84 for Leaflet.
 
 ## Code Style
-- TypeScript with strict typing, interfaces for props and data structures
-- React functional components with explicit typing (React.FC)
+- TypeScript with strict mode; interfaces for props and data structures
+- React functional components typed with `React.FC`
 - PascalCase for components/interfaces, camelCase for functions/variables
-- Imports order: React first, then components/types, utilities last
-- 2-space indentation, semicolons required, single quotes for strings
-- Error handling: try/catch for async, explicit error states with messages
-- Tests: descriptive blocks with clear assertions, mock data defined in tests
-- Material UI: Use MUI components for UI elements, styled-component approach for custom styling
+- 2-space indentation, semicolons required, single quotes
+- Import order: React first, then components/types, utilities last
+- Material UI (MUI v6) for UI components
+- Tests in `__tests__/` folders parallel to source, using Vitest + React Testing Library
 
-## Project Structure
-- /src/components/ - React components with parallel __tests__ folder
-  - Map.tsx - Interactive Leaflet map component
-  - SearchBar.tsx - Lake search with autocomplete and GPS location
-  - SidePanel.tsx - Information panel for selected features
-  - SpeciesFilter.tsx - Multi-select filter for fish species
-  - PressureChart.tsx - Air pressure visualization using Chart.js
-- /src/services/ - External service integrations
-  - weatherService.ts - Historical data (Open-Meteo) + forecast (api.met.no) integration
-- /src/types/ - TypeScript interfaces and type definitions
-  - GeoJsonTypes.ts - Type definitions for GeoJSON features
-  - proj4.d.ts - TypeScript declarations for proj4 library
-- /src/utils/ - Helper functions and data processing logic
-  - DataLoader.ts - Loads and processes fishing water data
-  - coordinateConverter.ts - Converts between coordinate systems (SWEREF99 to WGS84)
-  - geoUtils.ts - Geographic utility functions
-- /public/data/ - GeoJSON and water data by region
-  - index.json - List of available region files
-  - Sverige_2025-05-12.json - Complete Swedish dataset
-  - Regional files (Blekinge, Halland, etc.)
-- /cypress/ - End-to-end test files and support
-- /coverage/ - Test coverage reports (generated)
-- /build/ - Production build output (generated)
-
-## Testing Strategy
-- Unit tests with Vitest and React Testing Library
-- Cypress for end-to-end acceptance testing
-- Coverage reports available in /coverage/lcov-report/index.html
-
-## Key Features
-- Interactive map with OpenStreetMap layer switcher
-- Lake search with autocomplete and radius-based filtering
-- GPS location integration for nearby lake search
-- Species filtering with visual indicators (green for selected species)
-- Air pressure chart showing last 5 days history (Open-Meteo) and 5 days forecast (api.met.no)
-- Mobile-responsive design
-- Deployed at: https://larsakeekstrand.github.io/fishingwaters/
+## CI
+- Push/PR to main: build + test + auto-tag (date + short SHA format `v2025.05.12-abc1234`)
+- Acceptance tests run post-deploy against the live GitHub Pages site
